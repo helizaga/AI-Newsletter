@@ -1,0 +1,20 @@
+{
+  "name": "newsletter-v2",
+  "version": "1.0.0",
+  "description": "Your project description",
+  "main": "main.js",
+  "scripts": {
+    "start": "node main.js"
+  },
+  "dependencies": {
+    "@azure/cognitiveservices-websearch": "^3.0.1",
+    "@azure/ms-rest-azure-js": "^2.1.0",
+    "axios": "^1.4.0",
+    "cheerio": "^1.0.0-rc.12",
+    "dotenv": "^16.0.3"
+  },
+  "devDependencies": {},
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
