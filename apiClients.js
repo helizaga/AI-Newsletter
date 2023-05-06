@@ -1,7 +1,6 @@
 import axios from "axios";
-import { CognitiveServicesCredentials } from "@azure/ms-rest-azure-js";
-import WebSearchAPIClient from "@azure/cognitiveservices-websearch";
 import { config } from "dotenv";
+import https from "https";
 
 config(); // Load environment variables from .env file
 
@@ -44,14 +43,34 @@ export async function generateChatCompletion(
 }
 
 // This function queries the Bing Search API for a given searchTerm and returns the search results.
-export async function queryBingSearchAPI(searchTerm) {
-  let credentials = new CognitiveServicesCredentials(BING_API_KEY);
-  let webSearchApiClient = new WebSearchAPIClient(credentials);
+// apiClients.js
 
-  try {
-    const result = await webSearchApiClient.web.search(searchTerm);
-    return result.webPages.value;
-  } catch (err) {
-    throw err;
+export async function queryBingSearchAPI(searchTerm) {
+  const SUBSCRIPTION_KEY = BING_API_KEY;
+  if (!SUBSCRIPTION_KEY) {
+    throw new Error("BING_API_KEY is not set.");
   }
+
+  return new Promise((resolve, reject) => {
+    https.get(
+      {
+        hostname: "api.bing.microsoft.com",
+        path: "/v7.0/search?q=" + encodeURIComponent(searchTerm),
+        headers: { "Ocp-Apim-Subscription-Key": SUBSCRIPTION_KEY },
+      },
+      (res) => {
+        let body = "";
+        res.on("data", (part) => (body += part));
+        res.on("end", () => {
+          const result = JSON.parse(body);
+          console.log(result);
+          resolve(result.webPages.value);
+        });
+        res.on("error", (e) => {
+          console.error("Error:", e.message);
+          reject(e);
+        });
+      }
+    );
+  });
 }

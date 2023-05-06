@@ -9,4 +9,8 @@ async function generatePersonalizedContent(searchTerm) {
   return content;
 }
 
+generatePersonalizedContent("artificial intelligence").then((content) => {
+  console.log(content);
+});
+
 export { generatePersonalizedContent };
