@@ -19,7 +19,7 @@ async function generateContentWithGPT4(searchTerm, processedData) {
 
   const responseText = await generateChatCompletion(
     messages,
-    "gpt-4",
+    "gpt-3.5-turbo",
     0.7,
     1000
   );

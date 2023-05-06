@@ -5,15 +5,14 @@ import https from "https";
 config(); // Load environment variables from .env file
 
 const GPT_API_KEY = process.env.GPT_API_KEY;
-const GPT_API_ENDPOINT =
-  "https://api.openai.com/v1/engines/davinci-codex/completions";
+const GPT_API_ENDPOINT = "https://api.openai.com/v1/chat/completions";
 const BING_API_KEY = process.env.BING_API_KEY;
 
 // This function sends a chat completion request to the GPT API.
 // It takes messages, model, temperature, and maxTokens as input parameters.
 export async function generateChatCompletion(
   messages,
-  model = "gpt-4",
+  model = "gpt-3.5-turbo",
   temperature = 0.7,
   maxTokens = null
 ) {
@@ -55,7 +54,9 @@ export async function queryBingSearchAPI(searchTerm) {
     https.get(
       {
         hostname: "api.bing.microsoft.com",
-        path: "/v7.0/search?q=" + encodeURIComponent(searchTerm),
+        path:
+          "/v7.0/search?q=" +
+          encodeURIComponent("recent news about" + searchTerm),
         headers: { "Ocp-Apim-Subscription-Key": SUBSCRIPTION_KEY },
       },
       (res) => {
@@ -63,7 +64,6 @@ export async function queryBingSearchAPI(searchTerm) {
         res.on("data", (part) => (body += part));
         res.on("end", () => {
           const result = JSON.parse(body);
-          console.log(result);
           resolve(result.webPages.value);
         });
         res.on("error", (e) => {
