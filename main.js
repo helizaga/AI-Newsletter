@@ -9,8 +9,11 @@ async function generatePersonalizedContent(searchTerm) {
   return content;
 }
 
-generatePersonalizedContent("artificial intelligence").then((content) => {
+async function displayContent() {
+  const content = await generatePersonalizedContent("artificial intelligence");
   console.log(content);
-});
+}
+
+displayContent();
 
 export { generatePersonalizedContent };
