@@ -2,18 +2,20 @@ import { generateChatCompletion } from "./apiClients.js";
 
 // This function generates content using GPT-4 based on the searchTerm and processedData.
 // It creates a chat message structure and calls the generateChatCompletion function to get the response.
-async function generateContentWithGPT4(searchTerm, processedData) {
+async function generateContentWithGPT4(searchTerm, reason, processedData) {
   const dataSummary = processedData.join("\n\n");
 
   const messages = [
     {
       role: "system",
       content:
-        "You will be asked to create a customized newsletter for a user. Create one with at least 6 articles options per answer.",
+        "You will be asked to create a customized newsletter for a user. Write it in the style of a Medium post. Add other sections which intend to teach the reader something new. Make sure this section transitions seamlessly to the previous section. Make sure these sections are as comprehensive as the rest of the newsletter.",
     },
     {
       role: "user",
-      content: `Based on the following information about ${searchTerm}, create an academic newsletter with engagement metrics, links to articles, short summaries, and any other relevant sections:\n\n${dataSummary}`,
+      content: `Write me a newsletter about ${searchTerm} using text below. I want this newsletter because ${reason}.  Populate the newsletter with articles that are designed to get massive engagement.
+       Each article should be summarized and include an analysis of why it's important for the reader to know. For each section, include a link to the cited articles, the urls are belows. Include a call to action and provide insight on your recommendations: 
+       ${JSON.stringify(dataSummary)}`,
     },
   ];
 
@@ -21,7 +23,7 @@ async function generateContentWithGPT4(searchTerm, processedData) {
     messages,
     "gpt-3.5-turbo",
     0.7,
-    1000
+    2048
   );
   return responseText;
 }

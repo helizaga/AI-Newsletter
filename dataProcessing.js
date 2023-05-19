@@ -14,10 +14,14 @@ async function dataProcessingPipeline(searchTerm) {
 
   const textRank = new TextRank();
 
-  // This function processes the rawText using TextRank and cleans the summarized text.
-  const processedData = rawTexts.map((rawText) => {
-    const summarizedText = textRank.summarizeText(rawText, "medium");
-    return cleanText(summarizedText);
+  const processedData = rawTexts.map((rawText, index) => {
+    //const summarizedText = textRank.summarizeText(rawText, "long");
+    const cleanedText = cleanText(rawText);
+
+    return {
+      url: urls[index], // Add the corresponding URL here.
+      text: cleanedText,
+    };
   });
 
   return processedData;

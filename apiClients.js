@@ -56,7 +56,8 @@ export async function queryBingSearchAPI(searchTerm) {
         hostname: "api.bing.microsoft.com",
         path:
           "/v7.0/search?q=" +
-          encodeURIComponent("recent news about" + searchTerm),
+          encodeURIComponent(searchTerm) +
+          "&freshness=Month",
         headers: { "Ocp-Apim-Subscription-Key": SUBSCRIPTION_KEY },
       },
       (res) => {
