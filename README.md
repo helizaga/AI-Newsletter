@@ -1,16 +1,16 @@
-# Personalized Academic Newsletter Generator
+# Personalized Newsletter Generator
 
-This codebase is designed to generate personalized academic newsletters based on a given search term. It utilizes GPT-4, the successor to GPT-3, to create a customized newsletter with engagement metrics, links to articles, short summaries, and other relevant sections. The codebase is organized into several modules, each responsible for a specific task in the data processing pipeline.
+This codebase is designed to generate personalized academic newsletters based on a given search term. It utilizes GPT to create a customized newsletter with engagement metrics, links to articles, short summaries, and other relevant sections. The codebase is organized into several modules, each responsible for a specific task in the data processing pipeline.
 
 ## Modules
 
 ### gpt4.js
 
-This module contains the `generateContentWithGPT4` function, which takes a search term and processed data as input and generates a personalized academic newsletter using GPT-4.
+This module contains the `generateContentWithGPT4` function, which takes a search term and processed data as input and generates a personalized academic newsletter using GPT.
 
 ### main.js
 
-This module contains the `generatePersonalizedContent` function, which is the main entry point for generating personalized content. It calls the data processing pipeline and GPT-4 content generation functions.
+This module contains the `generatePersonalizedContent` function, which is the main entry point for generating personalized content. It calls the data processing pipeline and GPT content generation functions.
 
 ### TextRank.js
 
@@ -41,8 +41,8 @@ To use this codebase, follow these steps:
 ```javascript
 (async () => {
   const searchTerm = "artificial intelligence";
-  const personalizedContent = await generatePersonalizedContent(searchTerm);
+  const personalizedContent = await generatePersonalizedContent(searchTerm, reason);
   console.log(personalizedContent);
 })();
 ```
-This example will generate a personalized academic newsletter based on the search term "artificial intelligence".
+This example will generate a personalized newsletter based on the search term "artificial intelligence" for the the purpose for "reason".
