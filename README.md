@@ -26,14 +26,14 @@ This module contains utility functions, such as `scrapeWebContent` for scraping 
 
 ### apiClients.js
 
-This module contains API client functions, such as `generateChatCompletion` for generating chat completions using GPT-4 and `queryBingSearchAPI` for querying the Bing Search API.
+This module contains API client functions, such as `generateChatCompletion` for generating chat completions using GPT and `queryBingSearchAPI` for querying the Bing Search API.
 
 ## Usage
 
 To use this codebase, follow these steps:
 
 1. Install the required dependencies, such as axios and CognitiveServicesCredentials.
-2. Set up the necessary API keys and endpoints for GPT-4 and Bing Search API.
+2. Set up the necessary API keys and endpoints for GPT and Bing Search API.
 3. Call the `generatePersonalizedContent` function with a search term to generate a personalized academic newsletter.
 
 ## Example
@@ -41,8 +41,12 @@ To use this codebase, follow these steps:
 ```javascript
 (async () => {
   const searchTerm = "artificial intelligence";
-  const personalizedContent = await generatePersonalizedContent(searchTerm, reason);
+  const personalizedContent = await generatePersonalizedContent(
+    searchTerm,
+    reason
+  );
   console.log(personalizedContent);
 })();
 ```
+
 This example will generate a personalized newsletter based on the search term "artificial intelligence" for the the purpose for "reason".

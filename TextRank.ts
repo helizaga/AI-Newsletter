@@ -1,11 +1,14 @@
 class TextRank {
   // This function returns the intersection of two arrays a and b.
-  intersect(a, b) {
+  intersect(a: string[], b: string[]): string[] {
     return a.filter((value) => b.includes(value));
   }
 
   // This function summarizes the input rawText based on the summaryLength parameter.
-  summarizeText(rawText, summaryLength) {
+  summarizeText(
+    rawText: string,
+    summaryLength: "short" | "medium" | "long"
+  ): string {
     //	Check the selected length and assign it a number of sentences
     let sumLength = 0;
     if (summaryLength === "short") {
@@ -20,13 +23,10 @@ class TextRank {
     const sentences = rawText.split(/[.?!]+/);
 
     // create a matrix to store sentence similarity scores
-    const similarityMatrix = [];
-    for (let i = 0; i < sentences.length; i++) {
-      similarityMatrix[i] = [];
-      for (let j = 0; j < sentences.length; j++) {
-        similarityMatrix[i][j] = 0;
-      }
-    }
+    const similarityMatrix: number[][] = Array.from(
+      { length: sentences.length },
+      () => Array(sentences.length).fill(0)
+    );
 
     // calculate sentence similarity scores
     for (let i = 0; i < sentences.length; i++) {
@@ -35,15 +35,16 @@ class TextRank {
           sentences[i].split(" "),
           sentences[j].split(" ")
         );
-        similarityMatrix[i][j] =
+        const similarityScore =
           intersection.length /
           (Math.log(sentences[i].length) + Math.log(sentences[j].length));
-        similarityMatrix[j][i] = similarityMatrix[i][j];
+        similarityMatrix[i][j] = similarityScore;
+        similarityMatrix[j][i] = similarityScore;
       }
     }
 
     // calculate sentence scores
-    const sentenceScores = [];
+    const sentenceScores: number[] = [];
     for (let i = 0; i < sentences.length; i++) {
       let score = 0;
       for (let j = 0; j < sentences.length; j++) {
@@ -55,13 +56,10 @@ class TextRank {
     }
 
     // sort sentences by score
-    const sortedSentences = [];
-    for (let i = 0; i < sentences.length; i++) {
-      sortedSentences.push({
-        sentence: sentences[i],
-        score: sentenceScores[i],
-      });
-    }
+    const sortedSentences = sentences.map((sentence, i) => ({
+      sentence,
+      score: sentenceScores[i],
+    }));
     sortedSentences.sort((a, b) => b.score - a.score);
 
     // return the sentences with the highest scores

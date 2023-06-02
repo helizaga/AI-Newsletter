@@ -2,11 +2,13 @@
   "name": "ai-newsletter",
   "version": "1.0.0",
   "description": "Your project description",
-  "main": "main.js",
+  "main": "main.ts",
   "scripts": {
-    "start": "node main.js"
+    "build": "tsc",
+    "start": "tsc && node dist/main.js"
   },
   "dependencies": {
+    "@prisma/client": "^4.14.1",
     "axios": "^1.4.0",
     "boilerpipe-scraper": "^1.0.0",
     "dotenv": "^16.0.3",
@@ -14,6 +16,11 @@
   },
   "keywords": [],
   "author": "",
-  "type": "module",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^20.2.1",
+    "prisma": "^4.14.1",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.4"
+  }
 }
