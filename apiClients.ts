@@ -61,7 +61,8 @@ export async function queryBingSearchAPI(searchTerm: string): Promise<any[]> {
       {
         hostname: "api.bing.microsoft.com",
         path:
-          "/v7.0/search?q=" +
+          // https://api.bing.microsoft.com/v7.0/news/search
+          "/v7.0/news/search?q=" +
           encodeURIComponent(searchTerm) +
           "&freshness=Month",
         headers: { "Ocp-Apim-Subscription-Key": SUBSCRIPTION_KEY },
@@ -71,8 +72,8 @@ export async function queryBingSearchAPI(searchTerm: string): Promise<any[]> {
         res.on("data", (part: any) => (body += part));
         res.on("end", () => {
           const result = JSON.parse(body);
-          if (result.webPages && result.webPages.value) {
-            resolve(result.webPages.value);
+          if (result.value) {
+            resolve(result.value);
           } else {
             console.error("Unexpected API response:", result);
             reject(new Error("Unexpected API response"));

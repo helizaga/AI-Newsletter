@@ -16,6 +16,7 @@ async function generatePersonalizedContent(
   const processedData: ProcessedData[] = await dataProcessingPipeline(
     searchTerm
   );
+
   const content: string = await generateContentWithGPT(
     searchTerm,
     reason,
