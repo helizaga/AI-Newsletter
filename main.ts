@@ -52,11 +52,15 @@ async function generatePersonalizedContent(
 }
 
 async function displayContent(): Promise<void> {
-  const content: string = await generatePersonalizedContent(
-    "upcoming sneaker releases",
-    "be able to buy the shoes at the retail price"
-  );
-  console.log("Newsletter content: ", content);
+  try {
+    const content: string = await generatePersonalizedContent(
+      "upcoming sneaker releases",
+      "be able to buy the shoes at the retail price"
+    );
+    console.log("Newsletter content: ", content);
+  } catch (error) {
+    console.error("Error generating content:", error);
+  }
 }
 
 displayContent();

@@ -25,7 +25,7 @@ async function generateOptimalBingSearchQuery(
     messages,
     "gpt-3.5-turbo",
     0.7,
-    3000
+    200
   );
 
   return searchQuery;
@@ -44,7 +44,7 @@ async function generateSummaryWithGPT(
   const summaries: string[] = [];
 
   for (const article of processedData) {
-    const truncatedArticle = truncateText(article, 5000); // Truncate the article to 5000 characters
+    const truncatedArticle = truncateText(article, 14700); // Truncate the article to 5000 characters
     const messages: Message[] = [
       {
         role: "system",
@@ -60,7 +60,7 @@ async function generateSummaryWithGPT(
       messages,
       "gpt-3.5-turbo",
       0.7,
-      3000
+      500
     );
 
     summaries.push(summary);

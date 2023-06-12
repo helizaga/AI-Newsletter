@@ -56,30 +56,29 @@ export async function queryBingSearchAPI(searchTerm: string): Promise<any[]> {
     throw new Error("BING_API_KEY is not set.");
   }
 
-  return new Promise((resolve, reject) => {
-    https.get(
+  try {
+    const response = await axios.get(
+      "https://api.bing.microsoft.com/v7.0/news/search",
       {
-        hostname: "api.bing.microsoft.com",
-        path: "/v7.0/news/search?q=" + encodeURIComponent(searchTerm),
-        headers: { "Ocp-Apim-Subscription-Key": SUBSCRIPTION_KEY },
-      },
-      (res) => {
-        let body = "";
-        res.on("data", (part: any) => (body += part));
-        res.on("end", () => {
-          const result = JSON.parse(body);
-          if (result.value) {
-            resolve(result.value);
-          } else {
-            console.error("Unexpected API response:", result);
-            reject(new Error("Unexpected API response"));
-          }
-        });
-        res.on("error", (e: Error) => {
-          console.error("Error:", e.message);
-          reject(e);
-        });
+        params: {
+          q: searchTerm,
+        },
+        headers: {
+          "Ocp-Apim-Subscription-Key": SUBSCRIPTION_KEY,
+        },
       }
     );
-  });
+
+    if (response.data.value) {
+      return response.data.value;
+    } else {
+      console.error("Unexpected API response:", response.data);
+      throw new Error("Unexpected API response");
+    }
+  } catch (error: any) {
+    console.error(error.response || error);
+    throw new Error(
+      `Error ${error.response.status}: ${error.response.statusText}`
+    );
+  }
 }

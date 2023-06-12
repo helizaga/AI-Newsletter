@@ -13,13 +13,7 @@ export async function scrapeWebContent(url: string): Promise<string> {
       });
     });
 
-    // Remove extra spaces, newline characters, and other unwanted patterns
-    const cleanedText = text
-      .trim()
-      .replace(/\s\s+/g, " ")
-      .replace(/\n/g, " ")
-      .replace(/[^a-zA-Z0-9\s.,!?'"()]+/g, ""); // remove non-alphanumeric characters except punctuation
-
+    const cleanedText = cleanText(text);
     return cleanedText;
   } catch (error) {
     console.error(
