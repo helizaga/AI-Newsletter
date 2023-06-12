@@ -56,7 +56,7 @@ async function displayContent(): Promise<void> {
     "upcoming sneaker releases",
     "be able to buy the shoes at the retail price"
   );
-  console.log(content);
+  console.log("Newsletter content: ", content);
 }
 
 displayContent();

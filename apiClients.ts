@@ -69,7 +69,6 @@ export async function queryBingSearchAPI(searchTerm: string): Promise<any[]> {
         res.on("end", () => {
           const result = JSON.parse(body);
           if (result.value) {
-            console.log("Bing Search API response:", result.value);
             resolve(result.value);
           } else {
             console.error("Unexpected API response:", result);

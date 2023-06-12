@@ -12,7 +12,8 @@ async function generateOptimalBingSearchQuery(
   const messages: Message[] = [
     {
       role: "system",
-      content: `You are an AI tasked with generating the best Bing search query for a given topic and reason. Provide the search query without any intro or closer.`,
+      content: `You are an AI tasked with generating the best Bing search query for a given topic and reason. Provide the search query without any intro or closer.
+      Don't wrap the search query in quotes.`,
     },
     {
       role: "user",

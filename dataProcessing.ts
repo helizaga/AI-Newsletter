@@ -12,7 +12,6 @@ async function dataProcessingPipeline(
   searchTerm: string
 ): Promise<SearchData[]> {
   const searchResults = await queryBingSearchAPI(searchTerm);
-  console.log("Search results: ", searchResults);
   const urls: string[] = searchResults.map((result) => result.url);
 
   const contentPromises: Promise<string>[] = urls.map((url) =>
