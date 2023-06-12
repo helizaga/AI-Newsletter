@@ -1,5 +1,9 @@
 import { dataProcessingPipeline } from "./dataProcessing";
-import { generateContentWithGPT } from "./gpt";
+import {
+  generateSummaryWithGPT,
+  generateNewsletterWithGPT,
+  generateOptimalBingSearchQuery,
+} from "./gpt";
 
 // Define the type of the processedData
 interface ProcessedData {
@@ -13,14 +17,36 @@ async function generatePersonalizedContent(
   searchTerm: string,
   reason: string
 ): Promise<string> {
-  const processedData: ProcessedData[] = await dataProcessingPipeline(
-    searchTerm
+  // Generate the optimal Bing search query using GPT
+  const optimalSearchQuery: string = await generateOptimalBingSearchQuery(
+    searchTerm,
+    reason
   );
 
-  const content: string = await generateContentWithGPT(
+  console.log("Optimal search query: ", optimalSearchQuery);
+
+  const processedData: ProcessedData[] = await dataProcessingPipeline(
+    optimalSearchQuery
+  );
+
+  // Take only the first 4 articles
+  const firstFourArticles = processedData.slice(0, 4);
+
+  console.log("First four articles: ", firstFourArticles);
+
+  // Generate a summarized text using GPT-4
+  const summarizedText: string = await generateSummaryWithGPT(
+    firstFourArticles.map((data) => data.text)
+  );
+
+  console.log("Summarized text: ", summarizedText);
+
+  // Create a newsletter using the summarized text
+  const content: string = await generateNewsletterWithGPT(
     searchTerm,
     reason,
-    processedData.map((data) => data.text)
+    summarizedText,
+    firstFourArticles.map((data) => data.url)
   );
   return content;
 }

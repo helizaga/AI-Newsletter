@@ -1,6 +1,5 @@
 import { queryBingSearchAPI } from "./apiClients";
 import { scrapeWebContent, cleanText } from "./utils";
-import { TextRank } from "./TextRank";
 
 interface SearchData {
   url: string;
@@ -13,6 +12,7 @@ async function dataProcessingPipeline(
   searchTerm: string
 ): Promise<SearchData[]> {
   const searchResults = await queryBingSearchAPI(searchTerm);
+  console.log("Search results: ", searchResults);
   const urls: string[] = searchResults.map((result) => result.url);
 
   const contentPromises: Promise<string>[] = urls.map((url) =>
@@ -20,11 +20,8 @@ async function dataProcessingPipeline(
   );
   const rawTexts: string[] = await Promise.all(contentPromises);
 
-  const textRank = new TextRank();
-
   const processedData: SearchData[] = rawTexts.map((rawText, index) => {
-    const summarizedText: string = textRank.summarizeText(rawText, "long");
-    const cleanedText: string = cleanText(summarizedText);
+    const cleanedText: string = cleanText(rawText);
 
     return {
       url: urls[index], // Add the corresponding URL here.
