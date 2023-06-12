@@ -1,48 +1,76 @@
-# Personalized Newsletter Generator
+# Personalized Content Generator
 
-This codebase is designed to generate personalized academic newsletters based on a given search term. It utilizes GPT to create a customized newsletter with engagement metrics, links to articles, short summaries, and other relevant sections. The codebase is organized into several modules, each responsible for a specific task in the data processing pipeline.
+This project is a personalized content generator that utilizes GPT-3.5 and Bing Search API to create customized newsletters for users based on their interests and preferences. The generator scrapes web content, processes the data, and generates summaries using GPT-3.5. It then creates a comprehensive and engaging newsletter in the style of a Medium post.
 
-## Modules
+## Table of Contents
+1. [Features](#features)
+2. [Dependencies](#dependencies)
+3. [Installation](#installation)
+4. [Usage](#usage)
+5. [Data Processing Pipeline](#data-processing-pipeline)
+6. [Examples](#examples)
+7. [License](#license)
 
-### gpt4.js
+## Features <a name="features"></a>
+- Generate optimal Bing search queries using GPT-3.5
+- Scrape web content and process the data
+- Summarize articles using GPT-3.5
+- Create engaging newsletters in the style of a Medium post
 
-This module contains the `generateContentWithGPT4` function, which takes a search term and processed data as input and generates a personalized academic newsletter using GPT.
+## Dependencies <a name="dependencies"></a>
+- axios
+- boilerpipe
+- GPT-4 API
+- Bing Search API
 
-### main.js
+## Installation <a name="installation"></a>
+1. Clone the repository:
+    ```
+    git clone https://github.com/yourusername/personalized-content-generator.git
+    ```
+2. Install the dependencies:
+    ```
+    npm install
+    ```
+3. Set up the environment variables:
 
-This module contains the `generatePersonalizedContent` function, which is the main entry point for generating personalized content. It calls the data processing pipeline and GPT content generation functions.
+    Create a `.env` file in the root directory and add the following variables:
+    ```
+    GPT_API_KEY=your_gpt_api_key
+    BING_API_KEY=your_bing_api_key
+    ```
+    Replace `your_gpt_api_key` and `your_bing_api_key` with your respective API keys.
 
-### TextRank.js
+## Usage <a name="usage"></a>
+To run the generator, execute the following command:
 
-This module contains the `TextRank` class, which is used to summarize raw text using the TextRank algorithm. The `summarizeText` function takes raw text and a summary length as input and returns a summarized version of the text.
-
-### dataProcessing.js
-
-This module contains the `dataProcessingPipeline` function, which is responsible for processing raw text data. It calls the Bing Search API, scrapes web content, and processes the raw text using TextRank and text cleaning functions.
-
-### utils.js
-
-This module contains utility functions, such as `scrapeWebContent` for scraping web content from a given URL and `cleanText` for cleaning raw text.
-
-### apiClients.js
-
-This module contains API client functions, such as `generateChatCompletion` for generating chat completions using GPT-4 and `queryBingSearchAPI` for querying the Bing Search API.
-
-## Usage
-
-To use this codebase, follow these steps:
-
-1. Install the required dependencies, such as axios and CognitiveServicesCredentials.
-2. Set up the necessary API keys and endpoints for GPT-4 and Bing Search API.
-3. Call the `generatePersonalizedContent` function with a search term to generate a personalized academic newsletter.
-
-## Example
-
-```javascript
-(async () => {
-  const searchTerm = "artificial intelligence";
-  const personalizedContent = await generatePersonalizedContent(searchTerm, reason);
-  console.log(personalizedContent);
-})();
 ```
-This example will generate a personalized newsletter based on the search term "artificial intelligence" for the the purpose for "reason".
+npm start
+```
+
+This will run the displayContent() function in main.ts, which generates a personalized newsletter based on the given search term and reason.
+
+Data Processing Pipeline <a name="data-processing-pipeline"></a>
+The data processing pipeline consists of the following steps:
+
+1. Generate the optimal Bing search query using GPT-3.5 based on the user's search term and reason.
+2. Query the Bing Search API with the generated search query.
+3. Scrape web content from the search results using the boilerpipe library.
+4. Clean and process the scraped text.
+5. Generate summaries of the articles using GPT-3.5.
+6. Create a comprehensive and engaging newsletter using GPT-3.5.
+
+## Examples <a name="examples"></a>
+To generate a personalized newsletter about upcoming sneaker releases, you can call the generatePersonalizedContent() function with the following parameters:
+
+```
+generatePersonalizedContent(
+  "upcoming sneaker releases",
+  "be able to buy the shoes at the retail price"
+);
+```
+
+This will generate a newsletter with information about upcoming sneaker releases, tailored to help the user buy the shoes at the retail price.
+
+## License <a name="license"></a>
+This project is licensed under the MIT License.
