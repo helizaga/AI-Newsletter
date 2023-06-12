@@ -11,8 +11,10 @@ interface ProcessedData {
   text: string;
 }
 
-// This function generates personalized content for a given searchTerm.
-// It calls the dataProcessingPipeline to process the data and then generates content using GPT.
+// This function generates personalized content based on a given search term and reason.
+// It first generates an optimal Bing search query using GPT, then processes the data
+// from the search results, and finally creates a newsletter using the summarized text
+// and relevant URLs.
 async function generatePersonalizedContent(
   searchTerm: string,
   reason: string
@@ -34,7 +36,7 @@ async function generatePersonalizedContent(
 
   console.log("First four articles: ", firstFourArticles);
 
-  // Generate a summarized text using GPT-4
+  // Generate a summarized text using GPT
   const summarizedText: string = await generateSummaryWithGPT(
     firstFourArticles.map((data) => data.text)
   );
@@ -51,6 +53,7 @@ async function generatePersonalizedContent(
   return content;
 }
 
+// This function displays the generated content (newsletter) in the console.
 async function displayContent(): Promise<void> {
   try {
     const content: string = await generatePersonalizedContent(

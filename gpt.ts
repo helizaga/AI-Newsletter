@@ -5,6 +5,7 @@ interface Message {
   content: string;
 }
 
+// This function generates the best Bing search query for a given topic and reason using GPT.
 async function generateOptimalBingSearchQuery(
   topic: string,
   reason: string
@@ -30,7 +31,7 @@ async function generateOptimalBingSearchQuery(
 
   return searchQuery;
 }
-
+// This function truncates the given text to a specified maximum length.
 function truncateText(text: string, maxLength: number): string {
   if (text.length <= maxLength) {
     return text;
@@ -38,6 +39,8 @@ function truncateText(text: string, maxLength: number): string {
   return text.slice(0, maxLength - 3) + "...";
 }
 
+// This function generates a summary of the given processed data (articles) using GPT.
+// It truncates each article to 14700 characters and then generates a summary of 100-200 words..
 async function generateSummaryWithGPT(
   processedData: string[]
 ): Promise<string> {
@@ -69,6 +72,9 @@ async function generateSummaryWithGPT(
   return summaries.join("\n\n");
 }
 
+// This function generates a customized newsletter using GPT, based on the given
+// search term, reason, summarized text, and URLs. The newsletter is in the style
+// of a Medium post and includes several sections, each teaching the reader something new.
 async function generateNewsletterWithGPT(
   searchTerm: string,
   reason: string,

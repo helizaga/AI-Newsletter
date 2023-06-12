@@ -13,8 +13,8 @@ interface Message {
   content: string;
 }
 
-// This function sends a chat completion request to the GPT API.
-// It takes messages, model, temperature, and maxTokens as input parameters.
+// This function generates a chat completion using the GPT API.
+// It takes an array of messages, a model, temperature, and max tokens as input.
 export async function generateChatCompletion(
   messages: Message[],
   model: string = "gpt-3.5-turbo",
@@ -47,9 +47,7 @@ export async function generateChatCompletion(
   }
 }
 
-// This function queries the Bing Search API for a given searchTerm and returns the search results.
-// apiClients.js
-
+// This function queries the Bing Search API with a given search term and returns an array of search results.
 export async function queryBingSearchAPI(searchTerm: string): Promise<any[]> {
   const SUBSCRIPTION_KEY: string = BING_API_KEY;
   if (!SUBSCRIPTION_KEY) {
