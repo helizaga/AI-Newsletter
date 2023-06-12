@@ -1,45 +1,76 @@
-# Personalized Newsletter Generator
+# Personalized Content Generator
 
-This project is a personalized newsletter generator that uses GPT-4 and Bing Search API to create a customized newsletter for a user based on their interests. The newsletter is generated in the style of a Medium post and includes articles designed to get massive engagement. Each article is summarized and includes an analysis of why it's important for the reader to know. The newsletter also includes a call to action and provides insight on recommendations.
+This project is a personalized content generator that utilizes GPT-3.5 and Bing Search API to create customized newsletters for users based on their interests and preferences. The generator scrapes web content, processes the data, and generates summaries using GPT-3.5. It then creates a comprehensive and engaging newsletter in the style of a Medium post.
 
-## How it works
+## Table of Contents
+1. [Features](#features)
+2. [Dependencies](#dependencies)
+3. [Installation](#installation)
+4. [Usage](#usage)
+5. [Data Processing Pipeline](#data-processing-pipeline)
+6. [Examples](#examples)
+7. [License](#license)
 
-The code is organized into several TypeScript files, each responsible for a specific part of the process:
+## Features <a name="features"></a>
+- Generate optimal Bing search queries using GPT-3.5
+- Scrape web content and process the data
+- Summarize articles using GPT-3.5
+- Create engaging newsletters in the style of a Medium post
 
-- `main.ts`: The entry point of the application. It calls the `generatePersonalizedContent` function with the user's search term and reason for the newsletter.
-- `gpt.ts`: Contains the `generateContentWithGPT` function, which takes the search term, reason, and processed data as input and generates the newsletter using GPT.
-- `dataProcessing.ts`: Contains the `dataProcessingPipeline` function, which processes the search results and extracts the relevant content.
-- `apiClients.ts`: Contains functions to interact with external APIs, such as Bing Search API and GPT API.
-- `TextRank.ts`: Implements the TextRank algorithm for summarizing text.
-- `utils.ts`: Contains utility functions for cleaning and scraping web content.
+## Dependencies <a name="dependencies"></a>
+- axios
+- boilerpipe
+- GPT-4 API
+- Bing Search API
 
-The main flow of the application is as follows:
+## Installation <a name="installation"></a>
+1. Clone the repository:
+    ```
+    git clone https://github.com/yourusername/personalized-content-generator.git
+    ```
+2. Install the dependencies:
+    ```
+    npm install
+    ```
+3. Set up the environment variables:
 
-1. The user provides a search term and a reason for the newsletter.
-2. The application queries the Bing Search API to get relevant search results.
-3. The content of the search results is scraped and processed using the TextRank algorithm to generate summaries.
-4. The processed data is passed to the GPT API, which generates the personalized newsletter based on the user's search term, reason, and the processed data.
+    Create a `.env` file in the root directory and add the following variables:
+    ```
+    GPT_API_KEY=your_gpt_api_key
+    BING_API_KEY=your_bing_api_key
+    ```
+    Replace `your_gpt_api_key` and `your_bing_api_key` with your respective API keys.
 
-## How to run the project
+## Usage <a name="usage"></a>
+To run the generator, execute the following command:
 
-Before running the project, make sure you have the following prerequisites:
-
-- Node.js and npm installed on your system.
-- API keys for Bing Search API and GPT API.
-
-Follow these steps to run the project:
-
-1. Clone the repository to your local machine.
-2. Navigate to the project directory and run `npm install` to install the required dependencies.
-3. Create a `.env` file in the project root and add the following environment variables with your API keys:
-
-```env
-BING_API_KEY=<your_bing_api_key>
-GPT_API_KEY=<your_gpt_api_key>
+```
+npm start
 ```
 
-4. Compile the TypeScript files by running `npm run build`.
-5. Run the project using `npm start`.
+This will run the displayContent() function in main.ts, which generates a personalized newsletter based on the given search term and reason.
 
-The application will generate a personalized newsletter based on the user's search term and reason provided in the main.ts file. The generated newsletter will be printed to the console.
+Data Processing Pipeline <a name="data-processing-pipeline"></a>
+The data processing pipeline consists of the following steps:
 
+1. Generate the optimal Bing search query using GPT-3.5 based on the user's search term and reason.
+2. Query the Bing Search API with the generated search query.
+3. Scrape web content from the search results using the boilerpipe library.
+4. Clean and process the scraped text.
+5. Generate summaries of the articles using GPT-3.5.
+6. Create a comprehensive and engaging newsletter using GPT-3.5.
+
+## Examples <a name="examples"></a>
+To generate a personalized newsletter about upcoming sneaker releases, you can call the generatePersonalizedContent() function with the following parameters:
+
+```
+generatePersonalizedContent(
+  "upcoming sneaker releases",
+  "be able to buy the shoes at the retail price"
+);
+```
+
+This will generate a newsletter with information about upcoming sneaker releases, tailored to help the user buy the shoes at the retail price.
+
+## License <a name="license"></a>
+This project is licensed under the MIT License.
