@@ -57,8 +57,8 @@ async function generatePersonalizedContent(
 async function displayContent(): Promise<void> {
   try {
     const content: string = await generatePersonalizedContent(
-      "upcoming sneaker releases",
-      "be able to buy the shoes at the retail price"
+      "pool maintenance tips",
+      "I want to learn how to maintain my pool."
     );
     console.log("Newsletter content: ", content);
   } catch (error) {

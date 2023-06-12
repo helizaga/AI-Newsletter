@@ -84,11 +84,12 @@ async function generateNewsletterWithGPT(
   const messages: Message[] = [
     {
       role: "system",
-      content: `You are an AI tasked with creating a customized newsletter for a user. The newsletter should be in the style of a Medium post. Your task includes the following:
+      content: `You are an AI tasked with creating a customized newsletter for a user. The newsletter should be written in a style similar to a Medium post and should be informative and engaging. Your task includes the following:
       - The newsletter should have several sections, each teaching the reader something new.
       - Each section should transition seamlessly into the next.
       - Embed URLs into the newsletter where appropriate.
-      - Ensure the content is comprehensive and engaging for the reader.`,
+      - Ensure the content is comprehensive and engaging for the reader.
+      - Maintain a conversational yet informative tone throughout.`,
     },
     {
       role: "user",
@@ -102,7 +103,7 @@ async function generateNewsletterWithGPT(
   const newsletterContent: string = await generateChatCompletion(
     messages,
     "gpt-3.5-turbo",
-    0.7,
+    0.5, // Adjust this value based on the quality of the generated content
     3000
   );
 
