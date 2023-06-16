@@ -3,6 +3,7 @@ import {
   generateSummaryWithGPT,
   generateNewsletterWithGPT,
   generateOptimalBingSearchQuery,
+  getRelevanceScore,
 } from "./gpt";
 
 // Define the type of the processedData
@@ -31,8 +32,29 @@ async function generatePersonalizedContent(
     optimalSearchQuery
   );
 
-  // Take only the first 4 articles
-  const firstFourArticles = processedData.slice(0, 4);
+  // Calculate relevance scores for each article
+  const relevanceScoresPromises = processedData.map((data) =>
+    getRelevanceScore(data.text, searchTerm, reason)
+  );
+  const relevanceScores = await Promise.all(relevanceScoresPromises);
+
+  // Sort articles based on relevance scores
+  const sortedArticles = processedData
+    .map((data, index) => ({ ...data, relevanceScore: relevanceScores[index] }))
+    .sort((a, b) => b.relevanceScore - a.relevanceScore);
+
+  // Take only the first 4 most relevant articles
+  const firstFourArticles = sortedArticles.slice(0, 4);
+
+  if (firstFourArticles.length === 0) {
+    throw new Error(
+      "No relevant articles found for the given search term and reason."
+    );
+  } else if (firstFourArticles.length < 4) {
+    console.warn(
+      "Fewer than 4 relevant articles found. The newsletter may be shorter than expected."
+    );
+  }
 
   console.log("First four articles: ", firstFourArticles);
 

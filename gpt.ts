@@ -31,14 +31,6 @@ async function generateOptimalBingSearchQuery(
 
   return searchQuery;
 }
-// This function truncates the given text to a specified maximum length.
-function truncateText(text: string, maxLength: number): string {
-  if (text.length <= maxLength) {
-    return text;
-  }
-  return text.slice(0, maxLength - 3) + "...";
-}
-
 // This function generates a summary of the given processed data (articles) using GPT.
 // It truncates each article to 14700 characters and then generates a summary of 100-200 words..
 async function generateSummaryWithGPT(
@@ -47,7 +39,6 @@ async function generateSummaryWithGPT(
   const summaries: string[] = [];
 
   for (const article of processedData) {
-    const truncatedArticle = truncateText(article, 14700); // Truncate the article to 5000 characters
     const messages: Message[] = [
       {
         role: "system",
@@ -55,13 +46,13 @@ async function generateSummaryWithGPT(
       },
       {
         role: "user",
-        content: `Summarize the following article: ${truncatedArticle}`,
+        content: `Summarize the following article: ${article}`,
       },
     ];
 
     const summary: string = await generateChatCompletion(
       messages,
-      "gpt-3.5-turbo",
+      "gpt-3.5-turbo-16k",
       0.7,
       500
     );
@@ -102,7 +93,7 @@ async function generateNewsletterWithGPT(
 
   const newsletterContent: string = await generateChatCompletion(
     messages,
-    "gpt-3.5-turbo",
+    "gpt-3.5-turbo-16k",
     0.5, // Adjust this value based on the quality of the generated content
     3000
   );
@@ -110,8 +101,34 @@ async function generateNewsletterWithGPT(
   return newsletterContent;
 }
 
+async function getRelevanceScore(
+  article: string,
+  topic: string,
+  reason: string
+): Promise<number> {
+  const messages: Message[] = [
+    {
+      role: "system",
+      content: `You are an AI tasked with determining the relevance of an article to a given topic and reason. Provide a relevance score between 0 and 1, where 1 is highly relevant and 0 is not relevant at all.`,
+    },
+    {
+      role: "user",
+      content: `Rate the relevance of this article to the topic "${topic}" and the reason "${reason}": ${article}`,
+    },
+  ];
+
+  const score: string = await generateChatCompletion(
+    messages,
+    "gpt-4",
+    0.7,
+    50
+  );
+  return parseFloat(score);
+}
+
 export {
   generateSummaryWithGPT,
   generateNewsletterWithGPT,
   generateOptimalBingSearchQuery,
+  getRelevanceScore,
 };
