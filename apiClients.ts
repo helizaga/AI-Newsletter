@@ -18,7 +18,11 @@ interface Message {
 
 let totalCost = 0;
 
-async function countTokens(text: string, model: string, costPerToken: number) {
+async function countTokens(
+  text: string,
+  model: string,
+  costPerThousandTokens: number
+) {
   const modelData = await load(registry[models[model]]);
   const encoder = new Tiktoken(
     modelData.bpe_ranks,
@@ -26,12 +30,10 @@ async function countTokens(text: string, model: string, costPerToken: number) {
     modelData.pat_str
   );
   const tokens = encoder.encode(text);
-  totalCost += tokens.length * costPerToken;
+  totalCost += (tokens.length / 1000) * costPerThousandTokens; // Adjust the cost calculation
   encoder.free();
 }
 
-// This function generates a chat completion using the GPT API.
-// It takes an array of messages, a model, temperature, and max tokens as input.
 export async function generateChatCompletion(
   messages: Message[],
   model: string,
@@ -57,10 +59,17 @@ export async function generateChatCompletion(
     const response = await axios.post(GPT_API_ENDPOINT, data, { headers });
     const content = response.data.choices[0].message.content;
 
-    const costPerToken = model === "gpt-4" ? 0.06 : 0.002; // Set the cost per token for each model
+    // Set the cost per 1000 tokens for each model
+    const costPerThousandTokensInput = model === "gpt-4" ? 0.03 : 0.003; // Set the cost per 1000 tokens for input
+    const costPerThousandTokensOutput = model === "gpt-4" ? 0.06 : 0.004; // Set the cost per 1000 tokens for output
 
-    // Count tokens
-    await countTokens(content, model, costPerToken);
+    // Count tokens for the input messages as well
+    for (const message of messages) {
+      await countTokens(message.content, model, costPerThousandTokensInput);
+    }
+
+    // Count tokens for the output
+    await countTokens(content, model, costPerThousandTokensOutput);
 
     return content;
   } catch (error: any) {

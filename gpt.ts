@@ -106,6 +106,9 @@ async function getRelevanceScore(
   topic: string,
   reason: string
 ): Promise<number> {
+  if (article.trim() === "") {
+    return 0;
+  }
   const messages: Message[] = [
     {
       role: "system",
@@ -119,7 +122,7 @@ async function getRelevanceScore(
 
   const score: string = await generateChatCompletion(
     messages,
-    "gpt-4",
+    "gpt-3.5-turbo-16k",
     0.7,
     50
   );
