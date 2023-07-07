@@ -8,11 +8,11 @@
     "start": "tsc && node dist/main.js"
   },
   "dependencies": {
-    "@dqbd/tiktoken": "^1.0.7",
     "@prisma/client": "^4.14.1",
     "axios": "^1.4.0",
     "boilerpipe-scraper": "^1.0.0",
-    "dotenv": "^16.0.3"
+    "dotenv": "^16.0.3",
+    "tiktoken": "^1.0.10"
   },
   "keywords": [],
   "author": "",

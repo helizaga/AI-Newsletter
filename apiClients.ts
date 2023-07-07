@@ -1,9 +1,9 @@
 import axios from "axios";
 import { config } from "dotenv";
-import { Tiktoken } from "@dqbd/tiktoken/lite";
-import { load } from "@dqbd/tiktoken/load";
-import registry from "@dqbd/tiktoken/registry.json";
-import models from "@dqbd/tiktoken/model_to_encoding.json";
+import { Tiktoken } from "tiktoken/lite";
+import { load } from "tiktoken/load";
+import registry from "tiktoken/registry.json";
+import models from "tiktoken/model_to_encoding.json";
 
 config(); // Load environment variables from .env file
 
