@@ -1,6 +1,9 @@
 import axios from "axios";
 import { config } from "dotenv";
-import * as https from "https";
+import { Tiktoken } from "@dqbd/tiktoken/lite";
+import { load } from "@dqbd/tiktoken/load";
+import registry from "@dqbd/tiktoken/registry.json";
+import models from "@dqbd/tiktoken/model_to_encoding.json";
 
 config(); // Load environment variables from .env file
 
@@ -13,11 +16,25 @@ interface Message {
   content: string;
 }
 
+let totalCost = 0;
+
+async function countTokens(text: string, model: string, costPerToken: number) {
+  const modelData = await load(registry[models[model]]);
+  const encoder = new Tiktoken(
+    modelData.bpe_ranks,
+    modelData.special_tokens,
+    modelData.pat_str
+  );
+  const tokens = encoder.encode(text);
+  totalCost += tokens.length * costPerToken;
+  encoder.free();
+}
+
 // This function generates a chat completion using the GPT API.
 // It takes an array of messages, a model, temperature, and max tokens as input.
 export async function generateChatCompletion(
   messages: Message[],
-  model: string = "gpt-3.5-turbo",
+  model: string,
   temperature: number = 0.7,
   maxTokens: number | null = null
 ): Promise<string> {
@@ -38,13 +55,24 @@ export async function generateChatCompletion(
 
   try {
     const response = await axios.post(GPT_API_ENDPOINT, data, { headers });
-    return response.data.choices[0].message.content;
+    const content = response.data.choices[0].message.content;
+
+    const costPerToken = model === "gpt-4" ? 0.06 : 0.002; // Set the cost per token for each model
+
+    // Count tokens
+    await countTokens(content, model, costPerToken);
+
+    return content;
   } catch (error: any) {
     console.error(error.response || error); // Log the full error response
     throw new Error(
       `Error ${error.response.status}: ${error.response.statusText}`
     );
   }
+}
+
+export function getTotalCost() {
+  return totalCost;
 }
 
 // This function queries the Bing Search API with a given search term and returns an array of search results.

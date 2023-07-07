@@ -6,6 +6,8 @@ import {
   getRelevanceScore,
 } from "./gpt";
 
+import { getTotalCost } from "./apiClients";
+
 // Define the type of the processedData
 interface ProcessedData {
   url: string;
@@ -83,6 +85,10 @@ async function displayContent(): Promise<void> {
       "I want to learn how to maintain my pool."
     );
     console.log("Newsletter content: ", content);
+
+    // Log the total cost
+    const totalCost = getTotalCost();
+    console.log(`Total cost: $${totalCost}`);
   } catch (error) {
     console.error("Error generating content:", error);
   }

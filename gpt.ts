@@ -24,7 +24,7 @@ async function generateOptimalBingSearchQuery(
 
   const searchQuery: string = await generateChatCompletion(
     messages,
-    "gpt-3.5-turbo",
+    "gpt-4",
     0.7,
     200
   );
@@ -109,7 +109,7 @@ async function getRelevanceScore(
   const messages: Message[] = [
     {
       role: "system",
-      content: `You are an AI tasked with determining the relevance of an article to a given topic and reason. Provide a relevance score between 0 and 1, where 1 is highly relevant and 0 is not relevant at all.`,
+      content: `You are an AI tasked with determining the relevance of an article to a given topic and reason. Provide a relevance score between 0 and 1, where 1 is highly relevant and 0 is not relevant at all. Please respond with a number only.`,
     },
     {
       role: "user",
