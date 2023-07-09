@@ -1,9 +1,6 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 datasource db {
   provider = "postgresql"
-  url      = "postgresql://postgres:password@localhost:5432/postgres"
+  url      = "postgresql://postgres:53c137@localhost:5432/ainewsletter"
 }
 
 generator client {
@@ -11,16 +8,29 @@ generator client {
 }
 
 model User {
-  id        Int        @id @default(autoincrement())
-  email     String     @unique
-  name      String?
-  preferences Preference[]
+  id              Int           @id @default(autoincrement())
+  userEmail       String        @unique
+  name            String?
+  newsletters     Newsletter[]
+  emailsToSendTo  Json
 }
 
-model Preference {
-  id          Int    @id @default(autoincrement())
-  userId      Int
-  searchTerm  String
-  reason      String
-  user        User   @relation(fields: [userId], references: [id])
+model Newsletter {
+  id              Int          @id @default(autoincrement())
+  title           String
+  content         String
+  sentDate        DateTime
+  userId          Int
+  searchTerm      String
+  reason          String
+  user            User         @relation(fields: [userId], references: [id])
+  usedArticles    UsedArticle[]
+}
+
+model UsedArticle {
+  id              Int        @id @default(autoincrement())
+  url             String
+  newsletterId    Int
+  createdAt       DateTime  @default(now())
+  newsletter      Newsletter @relation(fields: [newsletterId], references: [id])
 }

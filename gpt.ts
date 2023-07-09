@@ -42,7 +42,7 @@ async function generateSummaryWithGPT(
     const messages: Message[] = [
       {
         role: "system",
-        content: `You are an AI tasked with summarizing the content of an article. Generate a summary of 100-200 words.`,
+        content: `You are an AI tasked with summarizing the content of an article. Generate a summary of 200-300 words.`,
       },
       {
         role: "user",
@@ -54,7 +54,7 @@ async function generateSummaryWithGPT(
       messages,
       "gpt-3.5-turbo-16k",
       0.7,
-      500
+      700
     );
 
     summaries.push(summary);
@@ -80,7 +80,9 @@ async function generateNewsletterWithGPT(
       - Each section should transition seamlessly into the next.
       - Embed URLs into the newsletter where appropriate.
       - Ensure the content is comprehensive and engaging for the reader.
-      - Maintain a conversational yet informative tone throughout.`,
+      - Maintain a conversational yet informative tone throughout.
+      - Use Markdown formatting and emojis.
+      - Reference the articles you used to generate the newsletter as outside sources.`,
     },
     {
       role: "user",
@@ -95,7 +97,7 @@ async function generateNewsletterWithGPT(
     messages,
     "gpt-3.5-turbo-16k",
     0.5, // Adjust this value based on the quality of the generated content
-    3000
+    4000
   );
 
   return newsletterContent;
@@ -126,6 +128,9 @@ async function getRelevanceScore(
     0.7,
     50
   );
+
+  console.log("Relevance score: ", score);
+
   return parseFloat(score);
 }
 

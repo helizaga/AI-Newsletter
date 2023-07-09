@@ -1,3 +1,4 @@
+import { PrismaClient } from "@prisma/client";
 import { dataProcessingPipeline } from "./dataProcessing";
 import {
   generateSummaryWithGPT,
@@ -5,7 +6,6 @@ import {
   generateOptimalBingSearchQuery,
   getRelevanceScore,
 } from "./gpt";
-
 import { getTotalCost } from "./apiClients";
 
 // Define the type of the processedData
@@ -14,13 +14,39 @@ interface ProcessedData {
   text: string;
 }
 
+const prisma = new PrismaClient();
+
+async function initializeApp() {
+  const existingUser = await prisma.user.findUnique({
+    where: {
+      userEmail: "tom.elizaga@gmail.com",
+    },
+  });
+
+  if (!existingUser) {
+    const newUser = await prisma.user.create({
+      data: {
+        userEmail: "tom.elizaga@gmail.com",
+        name: "Tom Elizaga",
+        emailsToSendTo: ["tom.elizaga@gmail.com"],
+      },
+    });
+
+    console.log("Created new user: ", newUser);
+    return newUser;
+  }
+
+  return existingUser;
+}
+
 // This function generates personalized content based on a given search term and reason.
 // It first generates an optimal Bing search query using GPT, then processes the data
 // from the search results, and finally creates a newsletter using the summarized text
 // and relevant URLs.
 async function generatePersonalizedContent(
   searchTerm: string,
-  reason: string
+  reason: string,
+  userId: number
 ): Promise<string> {
   // Generate the optimal Bing search query using GPT
   const optimalSearchQuery: string = await generateOptimalBingSearchQuery(
@@ -29,9 +55,10 @@ async function generatePersonalizedContent(
   );
 
   console.log("Optimal search query: ", optimalSearchQuery);
-
+  // get user id from db
   const processedData: ProcessedData[] = await dataProcessingPipeline(
-    optimalSearchQuery
+    optimalSearchQuery,
+    userId
   );
 
   // Calculate relevance scores for each article
@@ -78,11 +105,12 @@ async function generatePersonalizedContent(
 }
 
 // This function displays the generated content (newsletter) in the console.
-async function displayContent(): Promise<void> {
+async function displayContent(userId: number): Promise<void> {
   try {
     const content: string = await generatePersonalizedContent(
       "pool maintenance tips",
-      "I want to learn how to maintain my pool."
+      "I want to learn how to maintain my pool.",
+      userId
     );
     console.log("Newsletter content: ", content);
 
@@ -94,6 +122,14 @@ async function displayContent(): Promise<void> {
   }
 }
 
-displayContent();
-
-export { generatePersonalizedContent };
+initializeApp()
+  .then((user) => {
+    displayContent(user.id)
+      .then(() => {})
+      .catch((e) => {
+        console.error("Error displaying content:", e);
+      });
+  })
+  .catch((e) => {
+    console.error("Error initializing app:", e);
+  });

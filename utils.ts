@@ -1,35 +1,44 @@
 // utils.ts
-const boiler = require("boilerpipe-scraper");
+import puppeteer from "puppeteer";
 
 // This function scrapes web content from a given URL and returns the cleaned text.
 export async function scrapeWebContent(url: string): Promise<string> {
-  try {
-    const text = await new Promise<string>((resolve, reject) => {
-      // This function wraps the boilerpipe library to scrape web content and returns a promise.
-      boiler(
-        url,
-        // This callback function resolves or rejects a promise based on the success or failure of a text operation.
-        (err, text) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve(text);
-          }
-        }
-      );
-    });
+  const browser = await puppeteer.launch({ headless: "new" });
+  const page = await browser.newPage();
+  await page.goto(url, { waitUntil: "networkidle2" });
 
-    const cleanedText = cleanText(text);
-    return cleanedText;
-  } catch (error) {
-    console.error(
-      `Error scraping content from ${url}:`,
-      error instanceof Error ? error.message : error
-    );
-    throw error;
-  }
+  // Extract the text content of the relevant elements
+  const content = await page.evaluate(() => {
+    let text = "";
+    const elements = document.querySelectorAll("p, h1, h2, h3, article");
+    for (const element of elements) {
+      // Skip if the element is a script tag
+      if (element.tagName.toLowerCase() !== "script") {
+        text += element.textContent + "\n";
+      }
+    }
+    return text;
+  });
+  // Clean the text
+  const cleanedContent = cleanText(content);
+
+  await browser.close();
+  return cleanedContent;
 }
 // This function cleans raw text by trimming whitespace and removing extra spaces.
-export function cleanText(rawText: string): string {
-  return rawText.trim().replace(/\s\s+/g, " ");
+export function cleanText(text: string): string {
+  // Remove HTML tags
+  let cleanedText = text.replace(/<[^>]*>/g, " ");
+
+  // Decode HTML entities
+  cleanedText = cleanedText.replace(/&amp;/g, "&");
+  cleanedText = cleanedText.replace(/&lt;/g, "<");
+  cleanedText = cleanedText.replace(/&gt;/g, ">");
+  cleanedText = cleanedText.replace(/&quot;/g, '"');
+  cleanedText = cleanedText.replace(/&#039;/g, "'");
+
+  // Remove extra whitespace
+  cleanedText = cleanedText.replace(/\s+/g, " ").trim();
+
+  return cleanedText;
 }

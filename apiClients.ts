@@ -85,35 +85,30 @@ export function getTotalCost() {
 }
 
 // This function queries the Bing Search API with a given search term and returns an array of search results.
-export async function queryBingSearchAPI(searchTerm: string): Promise<any[]> {
-  const SUBSCRIPTION_KEY: string = BING_API_KEY;
-  if (!SUBSCRIPTION_KEY) {
-    throw new Error("BING_API_KEY is not set.");
-  }
-
+export async function queryBingSearchAPI(searchTerm: string) {
   try {
     const response = await axios.get(
-      "https://api.bing.microsoft.com/v7.0/news/search",
+      "https://api.bing.microsoft.com/v7.0/search",
       {
         params: {
           q: searchTerm,
         },
         headers: {
-          "Ocp-Apim-Subscription-Key": SUBSCRIPTION_KEY,
+          "Ocp-Apim-Subscription-Key": BING_API_KEY,
         },
       }
     );
 
-    if (response.data.value) {
-      return response.data.value;
-    } else {
-      console.error("Unexpected API response:", response.data);
-      throw new Error("Unexpected API response");
-    }
+    return response.data.webPages.value;
   } catch (error: any) {
-    console.error(error.response || error);
-    throw new Error(
-      `Error ${error.response.status}: ${error.response.statusText}`
-    );
+    console.error(`Error querying Bing API: ${error.message}`);
+
+    // If the error is a response error, log more details
+    if (error.response) {
+      console.error(`Response status: ${error.response.status}`);
+      console.error(`Response data: ${JSON.stringify(error.response.data)}`);
+    }
+
+    throw error;
   }
 }
