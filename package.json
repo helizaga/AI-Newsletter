@@ -9,9 +9,11 @@
   },
   "dependencies": {
     "@prisma/client": "^4.16.2",
+    "@types/puppeteer": "^7.0.4",
     "axios": "^1.4.0",
     "boilerpipe-scraper": "^1.0.0",
     "dotenv": "^16.3.1",
+    "he": "^1.2.0",
     "puppeteer": "^20.8.0",
     "tiktoken": "^1.0.10"
   },
@@ -19,6 +21,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/he": "^1.2.0",
     "@types/node": "^20.2.1",
     "prisma": "^4.16.2",
     "ts-node": "^10.9.1",
