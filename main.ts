@@ -1,34 +1,29 @@
 import { PrismaClient } from "@prisma/client";
-import { dataProcessingPipeline } from "./dataProcessing";
+import { processAndSortArticles } from "./dataProcessing";
 import {
   generateSummaryWithGPT,
   generateNewsletterWithGPT,
   generateOptimalBingSearchQuery,
-  getRelevanceScore,
 } from "./gpt";
 import { getTotalCost } from "./apiClients";
 
 // Define the type of the processedData
-interface ProcessedData {
-  url: string;
-  text: string;
-}
 
 const prisma = new PrismaClient();
 
-async function initializeApp() {
+async function initializeApp(userEmail: string, userName: string) {
   const existingUser = await prisma.user.findUnique({
     where: {
-      userEmail: "tom.elizaga@gmail.com",
+      userEmail: userEmail,
     },
   });
 
   if (!existingUser) {
     const newUser = await prisma.user.create({
       data: {
-        userEmail: "tom.elizaga@gmail.com",
-        name: "Tom Elizaga",
-        emailsToSendTo: ["tom.elizaga@gmail.com"],
+        userEmail: userEmail,
+        name: userName,
+        emailsToSendTo: [userEmail],
       },
     });
 
@@ -55,22 +50,13 @@ async function generatePersonalizedContent(
   );
 
   console.log("Optimal search query: ", optimalSearchQuery);
-  // get user id from db
-  const processedData: ProcessedData[] = await dataProcessingPipeline(
+
+  const sortedArticles = await processAndSortArticles(
+    searchTerm,
+    reason,
     optimalSearchQuery,
     userId
   );
-
-  // Calculate relevance scores for each article
-  const relevanceScoresPromises = processedData.map((data) =>
-    getRelevanceScore(data.text, searchTerm, reason)
-  );
-  const relevanceScores = await Promise.all(relevanceScoresPromises);
-
-  // Sort articles based on relevance scores
-  const sortedArticles = processedData
-    .map((data, index) => ({ ...data, relevanceScore: relevanceScores[index] }))
-    .sort((a, b) => b.relevanceScore - a.relevanceScore);
 
   // Take only the first 4 most relevant articles
   const firstFourArticles = sortedArticles.slice(0, 4);
@@ -101,15 +87,46 @@ async function generatePersonalizedContent(
     summarizedText,
     firstFourArticles.map((data) => data.url)
   );
+
+  // Create a new newsletter in the database
+  const newsletter = await prisma.newsletter.create({
+    data: {
+      title: `Newsletter: ${optimalSearchQuery} - ${new Date().toISOString()}`,
+      content: content,
+      sentDate: new Date(),
+      userId: userId,
+      searchTerm: searchTerm,
+      reason: reason,
+    },
+  });
+
+  console.log("Created new newsletter: ", newsletter);
+
+  // Update the UsedArticle table with the articles used in this newsletter
+  await Promise.all(
+    firstFourArticles.map((article) =>
+      prisma.usedArticle.create({
+        data: {
+          url: article.url,
+          newsletterId: newsletter.id,
+          createdAt: new Date(),
+        },
+      })
+    )
+  );
   return content;
 }
 
 // This function displays the generated content (newsletter) in the console.
-async function displayContent(userId: number): Promise<void> {
+async function displayContent(
+  userId: number,
+  searchTerm: string,
+  reason: string
+): Promise<void> {
   try {
     const content: string = await generatePersonalizedContent(
-      "pool maintenance tips",
-      "I want to learn how to maintain my pool.",
+      searchTerm,
+      reason,
       userId
     );
     console.log("Newsletter content: ", content);
@@ -122,13 +139,19 @@ async function displayContent(userId: number): Promise<void> {
   }
 }
 
-initializeApp()
+initializeApp("tom.elizaga@gmail.com", "Tom Elizaga")
   .then((user) => {
-    displayContent(user.id)
-      .then(() => {})
-      .catch((e) => {
-        console.error("Error displaying content:", e);
-      });
+    if (!user) {
+      throw new Error("No user returned from initializeApp");
+    }
+    if (!user.id) {
+      throw new Error("User has no ID");
+    }
+    displayContent(
+      user.id,
+      "pool maintenance tips",
+      "I want to learn how to maintain my pool."
+    );
   })
   .catch((e) => {
     console.error("Error initializing app:", e);
