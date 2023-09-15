@@ -80,13 +80,16 @@ async function generatePersonalizedContent(
 
   console.log("Summarized text: ", summarizedText);
 
+  const unsubscribeLink = `http://yourdomain.com/unsubscribe?userId=${userId}&email=recipient@email.com`;
+
   // Create a newsletter using the summarized text
-  const content: string = await generateNewsletterWithGPT(
-    searchTerm,
-    reason,
-    summarizedText,
-    firstFourArticles.map((data) => data.url)
-  );
+  const content: string =
+    (await generateNewsletterWithGPT(
+      searchTerm,
+      reason,
+      summarizedText,
+      firstFourArticles.map((data) => data.url)
+    )) + `\n\n[Unsubscribe](${unsubscribeLink})`;
 
   // Create a new newsletter in the database
   const newsletter = await prisma.newsletter.create({

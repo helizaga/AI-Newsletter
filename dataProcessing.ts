@@ -10,6 +10,7 @@ interface ArticleData {
 }
 
 async function isArticleUsed(url: string, userId: number): Promise<boolean> {
+  // checking if article was used by same user/admin before
   const usedArticle = await prisma.usedArticle.findFirst({
     where: {
       url: url,
