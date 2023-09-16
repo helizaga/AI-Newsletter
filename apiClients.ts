@@ -18,6 +18,20 @@ interface Message {
 
 let totalCost = 0;
 
+export function updateUserInDatabase(user, context, callback) {
+  axios
+    .post("http://localhost:3001/api/update-user", {
+      email: user.email,
+      name: user.name,
+    })
+    .then((response) => {
+      callback(null, user, context);
+    })
+    .catch((error) => {
+      callback(error);
+    });
+}
+
 async function countTokens(
   text: string,
   model: string,
@@ -40,44 +54,38 @@ export async function generateChatCompletion(
   temperature: number = 0.7,
   maxTokens: number | null = null
 ): Promise<string> {
-  const headers = {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${GPT_API_KEY}`,
-  };
-
-  const data: any = {
-    model,
-    messages,
-    temperature,
-  };
-
-  if (maxTokens !== null) {
-    data.max_tokens = maxTokens;
-  }
-
-  try {
-    const response = await axios.post(GPT_API_ENDPOINT, data, { headers });
-    const content = response.data.choices[0].message.content;
-
-    // Set the cost per 1000 tokens for each model
-    const costPerThousandTokensInput = model === "gpt-4" ? 0.03 : 0.003; // Set the cost per 1000 tokens for input
-    const costPerThousandTokensOutput = model === "gpt-4" ? 0.06 : 0.004; // Set the cost per 1000 tokens for output
-
-    // Count tokens for the input messages as well
-    for (const message of messages) {
-      await countTokens(message.content, model, costPerThousandTokensInput);
-    }
-
-    // Count tokens for the output
-    await countTokens(content, model, costPerThousandTokensOutput);
-
-    return content;
-  } catch (error: any) {
-    console.error(error.response || error); // Log the full error response
-    throw new Error(
-      `Error ${error.response.status}: ${error.response.statusText}`
-    );
-  }
+  return "This is a dummy completion.";
+  // const headers = {
+  //   "Content-Type": "application/json",
+  //   Authorization: `Bearer ${GPT_API_KEY}`,
+  // };
+  // const data: any = {
+  //   model,
+  //   messages,
+  //   temperature,
+  // };
+  // if (maxTokens !== null) {
+  //   data.max_tokens = maxTokens;
+  // }
+  // try {
+  //   const response = await axios.post(GPT_API_ENDPOINT, data, { headers });
+  //   const content = response.data.choices[0].message.content;
+  //   // Set the cost per 1000 tokens for each model
+  //   const costPerThousandTokensInput = model === "gpt-4" ? 0.03 : 0.003; // Set the cost per 1000 tokens for input
+  //   const costPerThousandTokensOutput = model === "gpt-4" ? 0.06 : 0.004; // Set the cost per 1000 tokens for output
+  //   // Count tokens for the input messages as well
+  //   for (const message of messages) {
+  //     await countTokens(message.content, model, costPerThousandTokensInput);
+  //   }
+  //   // Count tokens for the output
+  //   await countTokens(content, model, costPerThousandTokensOutput);
+  //   return content;
+  // } catch (error: any) {
+  //   console.error(error.response || error); // Log the full error response
+  //   throw new Error(
+  //     `Error ${error.response.status}: ${error.response.statusText}`
+  //   );
+  // }
 }
 
 export function getTotalCost() {
@@ -86,29 +94,34 @@ export function getTotalCost() {
 
 // This function queries the Bing Search API with a given search term and returns an array of search results.
 export async function queryBingSearchAPI(searchTerm: string) {
-  try {
-    const response = await axios.get(
-      "https://api.bing.microsoft.com/v7.0/search",
-      {
-        params: {
-          q: searchTerm,
-        },
-        headers: {
-          "Ocp-Apim-Subscription-Key": BING_API_KEY,
-        },
-      }
-    );
+  return [
+    { url: "http://dummy1.com" },
+    { url: "http://dummy2.com" },
+    // Add more dummy URLs
+  ];
+  // try {
+  //   const response = await axios.get(
+  //     "https://api.bing.microsoft.com/v7.0/search",
+  //     {
+  //       params: {
+  //         q: searchTerm,
+  //       },
+  //       headers: {
+  //         "Ocp-Apim-Subscription-Key": BING_API_KEY,
+  //       },
+  //     }
+  //   );
 
-    return response.data.webPages.value;
-  } catch (error: any) {
-    console.error(`Error querying Bing API: ${error.message}`);
+  //   return response.data.webPages.value;
+  // } catch (error: any) {
+  //   console.error(`Error querying Bing API: ${error.message}`);
 
-    // If the error is a response error, log more details
-    if (error.response) {
-      console.error(`Response status: ${error.response.status}`);
-      console.error(`Response data: ${JSON.stringify(error.response.data)}`);
-    }
+  //   // If the error is a response error, log more details
+  //   if (error.response) {
+  //     console.error(`Response status: ${error.response.status}`);
+  //     console.error(`Response data: ${JSON.stringify(error.response.data)}`);
+  //   }
 
-    throw error;
-  }
+  //   throw error;
+  // }
 }

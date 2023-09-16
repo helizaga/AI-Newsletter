@@ -70,8 +70,19 @@ async function processAndSortArticles(
   optimalSearchQuery: string,
   userId: number
 ): Promise<ArticleData[]> {
-  const processedArticles = await processArticles(optimalSearchQuery, userId);
-  return sortArticles(processedArticles, searchTerm, reason);
+  // const processedArticles = await processArticles(optimalSearchQuery, userId);
+  // return sortArticles(processedArticles, searchTerm, reason);
+  console.log("Dummy Processing and Sorting Articles");
+  return [
+    {
+      url: "http://dummy1.com",
+      text: "Dummy article 1",
+    },
+    {
+      url: "http://dummy2.com",
+      text: "Dummy article 2",
+    },
+  ];
 }
 
 export { processAndSortArticles };

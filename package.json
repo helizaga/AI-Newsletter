@@ -2,16 +2,19 @@
   "name": "ai-newsletter",
   "version": "1.0.0",
   "description": "Your project description",
-  "main": "main.ts",
+  "main": "dist/server.js",
   "scripts": {
-    "build": "tsc",
-    "start": "tsc && node dist/main.js"
+    "start": "tsc && concurrently \"cd client && npm start\" \"npm run start:server\"",
+    "start:server": "node dist/server.js",
+    "build": "tsc"
   },
   "dependencies": {
-    "@prisma/client": "^4.16.2",
+    "@prisma/client": "^5.3.1",
     "@types/puppeteer": "^7.0.4",
     "axios": "^1.4.0",
     "boilerpipe-scraper": "^1.0.0",
+    "concurrently": "^8.2.1",
+    "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "he": "^1.2.0",
@@ -24,7 +27,7 @@
   "devDependencies": {
     "@types/he": "^1.2.0",
     "@types/node": "^20.2.1",
-    "prisma": "^4.16.2",
+    "prisma": "^5.3.1",
     "ts-node": "^10.9.1",
     "typescript": "^5.0.4"
   }

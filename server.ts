@@ -1,8 +1,19 @@
 import express from "express";
 import { PrismaClient } from "@prisma/client";
+const cors = require("cors");
 
 const app = express();
+app.use(express.json());
+
 const prisma = new PrismaClient();
+
+const PORT = 3001; // Or another port number
+
+app.use(cors());
+
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
 
 app.get("/unsubscribe", async (req, res) => {
   try {
@@ -38,4 +49,18 @@ app.get("/unsubscribe", async (req, res) => {
     console.error("Error in unsubscribe:", error);
     return res.status(500).send("Internal Server Error");
   }
+});
+
+// Add this new API endpoint
+app.post("/api/update-user", async (req, res) => {
+  const { email, name } = req.body;
+
+  // Update or create new user in your database
+  await prisma.user.upsert({
+    where: { userEmail: email },
+    update: { name },
+    create: { userEmail: email, name, emailsToSendTo: [email] },
+  });
+
+  res.status(200).json({ message: "User updated successfully" });
 });

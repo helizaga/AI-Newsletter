@@ -11,27 +11,45 @@ import { getTotalCost } from "./apiClients";
 
 const prisma = new PrismaClient();
 
-async function initializeApp(userEmail: string, userName: string) {
-  const existingUser = await prisma.user.findUnique({
-    where: {
-      userEmail: userEmail,
-    },
+// Function to import an array of emails
+async function importEmailList(
+  userId: number,
+  newEmailList: string[]
+): Promise<void> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
   });
-
-  if (!existingUser) {
-    const newUser = await prisma.user.create({
-      data: {
-        userEmail: userEmail,
-        name: userName,
-        emailsToSendTo: [userEmail],
-      },
+  if (user) {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { emailsToSendTo: newEmailList },
     });
-
-    console.log("Created new user: ", newUser);
-    return newUser;
+    console.log("Email list imported successfully.");
+  } else {
+    console.log("User not found.");
   }
+}
 
-  return existingUser;
+// Function to add a single email
+async function addSingleEmail(userId: number, newEmail: string): Promise<void> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+  });
+  if (user && user.emailsToSendTo) {
+    if (Array.isArray(user.emailsToSendTo)) {
+      // Explicitly check if it's an array
+      const updatedEmailsToSendTo = [...user.emailsToSendTo, newEmail];
+      await prisma.user.update({
+        where: { id: userId },
+        data: { emailsToSendTo: updatedEmailsToSendTo },
+      });
+      console.log("New email added successfully.");
+    } else {
+      console.log("emailsToSendTo is not an array.");
+    }
+  } else {
+    console.log("User not found or emailsToSendTo is null.");
+  }
 }
 
 // This function generates personalized content based on a given search term and reason.
@@ -141,21 +159,3 @@ async function displayContent(
     console.error("Error generating content:", error);
   }
 }
-
-initializeApp("tom.elizaga@gmail.com", "Tom Elizaga")
-  .then((user) => {
-    if (!user) {
-      throw new Error("No user returned from initializeApp");
-    }
-    if (!user.id) {
-      throw new Error("User has no ID");
-    }
-    displayContent(
-      user.id,
-      "pool maintenance tips",
-      "I want to learn how to maintain my pool."
-    );
-  })
-  .catch((e) => {
-    console.error("Error initializing app:", e);
-  });
