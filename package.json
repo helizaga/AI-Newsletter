@@ -5,7 +5,7 @@
   "main": "dist/server.js",
   "scripts": {
     "start": "tsc && concurrently \"cd client && npm start\" \"npm run start:server\"",
-    "start:server": "node dist/server.js",
+    "start:server": "node server/dist/server/server.js",
     "build": "tsc"
   },
   "dependencies": {
@@ -25,6 +25,8 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "@types/express": "^4.17.17",
     "@types/he": "^1.2.0",
     "@types/node": "^20.2.1",
     "prisma": "^5.3.1",

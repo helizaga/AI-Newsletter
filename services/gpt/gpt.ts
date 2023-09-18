@@ -1,8 +1,78 @@
-import { generateChatCompletion } from "./apiClients";
+import axios from "axios";
+import { Tiktoken } from "tiktoken/lite";
+import { load } from "tiktoken/load";
+import registry from "tiktoken/registry.json";
+import models from "tiktoken/model_to_encoding.json";
+
+const GPT_API_KEY = process.env.GPT_API_KEY as string;
+const GPT_API_ENDPOINT = "https://api.openai.com/v1/chat/completions";
 
 interface Message {
-  role: "system" | "user";
+  role: string;
   content: string;
+}
+
+let totalCost = 0;
+
+export async function generateChatCompletion(
+  messages: Message[],
+  model: string,
+  temperature: number = 0.7,
+  maxTokens: number | null = null
+): Promise<string> {
+  // Implement your function logic here.
+  // const headers = {
+  //   "Content-Type": "application/json",
+  //   Authorization: `Bearer ${GPT_API_KEY}`,
+  // };
+  // const data: any = {
+  //   model,
+  //   messages,
+  //   temperature,
+  // };
+  // if (maxTokens !== null) {
+  //   data.max_tokens = maxTokens;
+  // }
+  // try {
+  //   const response = await axios.post(GPT_API_ENDPOINT, data, { headers });
+  //   const content = response.data.choices[0].message.content;
+  //   // Set the cost per 1000 tokens for each model
+  //   const costPerThousandTokensInput = model === "gpt-4" ? 0.03 : 0.003; // Set the cost per 1000 tokens for input
+  //   const costPerThousandTokensOutput = model === "gpt-4" ? 0.06 : 0.004; // Set the cost per 1000 tokens for output
+  //   // Count tokens for the input messages as well
+  //   for (const message of messages) {
+  //     await countTokens(message.content, model, costPerThousandTokensInput);
+  //   }
+  //   // Count tokens for the output
+  //   await countTokens(content, model, costPerThousandTokensOutput);
+  //   return content;
+  // } catch (error: any) {
+  //   console.error(error.response || error); // Log the full error response
+  //   throw new Error(
+  //     `Error ${error.response.status}: ${error.response.statusText}`
+  //   );
+  // }
+  return "This is a dummy completion.";
+}
+
+async function countTokens(
+  text: string,
+  model: string,
+  costPerThousandTokens: number
+): Promise<void> {
+  const modelData = await load(registry[models[model]]);
+  const encoder = new Tiktoken(
+    modelData.bpe_ranks,
+    modelData.special_tokens,
+    modelData.pat_str
+  );
+  const tokens = encoder.encode(text);
+  totalCost += (tokens.length / 1000) * costPerThousandTokens;
+  encoder.free();
+}
+
+export function getTotalCost(): number {
+  return totalCost;
 }
 
 // This function generates the best Bing search query for a given topic and reason using GPT.
