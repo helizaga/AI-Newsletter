@@ -42,14 +42,10 @@ export async function scrapeWebContent(url: string): Promise<string> {
 
 // This function cleans raw text by trimming whitespace and removing extra spaces.
 export function cleanText(text: string): string {
-  // Remove HTML tags
-  let cleanedText = text.replace(/<[^>]*>/g, " ");
-
-  // Decode HTML entities using the 'he' library
-  cleanedText = he.decode(cleanedText);
-
-  // Remove extra whitespace
-  cleanedText = cleanedText.replace(/\s+/g, " ").trim();
-
-  return cleanedText;
+  return he.decode(
+    text
+      .replace(/<[^>]*>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+  );
 }

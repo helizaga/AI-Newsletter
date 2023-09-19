@@ -2,8 +2,9 @@ import express, { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import cors from "cors";
 import { generatePersonalizedContent, isArticleUsed } from "./dataProcessing";
-import AWS from "aws-sdk";
 import dotenv from "dotenv";
+import { SESClient } from "@aws-sdk/client-ses";
+import { SendEmailCommand } from "@aws-sdk/client-ses";
 
 dotenv.config();
 
@@ -20,14 +21,14 @@ app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
 
-AWS.config.update({
-  region: process.env.AWS_REGION,
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-});
-
-// Initialize SES
-const ses = new AWS.SES();
+const sesConfig = {
+  region: process.env.AWS_REGION!,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+  },
+};
+const sesClient = new SESClient(sesConfig);
 
 // API Endpoints
 app.get("/unsubscribe", unsubscribeHandler);
@@ -77,14 +78,16 @@ async function sendNewsletterHandler(req: Request, res: Response) {
 
     // Send email via AWS SES
     try {
-      ses.sendEmail(params, function (err, data) {
-        if (err) {
-          throw err;
-        }
+      const sendEmailCommand = new SendEmailCommand(params);
+      try {
+        const data = await sesClient.send(sendEmailCommand);
         return res
           .status(200)
           .json({ message: "Newsletter sent successfully", data });
-      });
+      } catch (err) {
+        console.error(err);
+        return res.status(500).json({ error: "Failed to send email" });
+      }
     } catch (err) {
       console.error(err);
       return res.status(500).json({ error: "Failed to send email" });
@@ -96,15 +99,11 @@ async function sendNewsletterHandler(req: Request, res: Response) {
 }
 
 async function getNewslettersHandler(req: Request, res: Response) {
-  const id = req.query.id as string; // Type assertion here
-
-  if (typeof id !== "string") {
-    // Runtime type check
-    return res.status(400).json({ error: "Invalid id query parameter" });
-  }
+  const id = req.query.id as string;
+  if (!id) return res.status(400).json({ error: "Invalid id query parameter" });
 
   const newsletters = await prisma.newsletter.findMany({
-    where: { user: { id: id } },
+    where: { user: { id } },
   });
   res.json(newsletters);
 }
@@ -139,14 +138,21 @@ async function deleteNewsletterHandler(req: Request, res: Response) {
 async function deleteSelectedEmailsHandler(req: Request, res: Response) {
   const { id, emailsToDelete } = req.body;
 
-  if (!id || !Array.isArray(emailsToDelete)) {
-    return res.status(400).json({ error: "Invalid payload" });
+  if (!id) {
+    return res.status(400).json({ error: "ID is missing from payload" });
+  }
+  if (!Array.isArray(emailsToDelete)) {
+    return res.status(400).json({ error: "emailsToDelete is not an array" });
   }
 
   try {
     const user = await prisma.user.findUnique({
       where: { id: id },
     });
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
 
     if (!user || !Array.isArray(user.emailsToSendTo)) {
       return res

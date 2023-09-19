@@ -34,49 +34,44 @@ async function isArticleUsed(
   return Boolean(usedArticle);
 }
 
-async function processArticles(
+const processArticles = async (
   optimalSearchQuery: string,
   userId: string,
   topic: string,
   reason: string
-): Promise<ArticleData[]> {
+): Promise<ArticleData[]> => {
   const searchResults = await queryBingSearchAPI(optimalSearchQuery);
-  let urls: string[] = searchResults.map((result) => result.url);
+  const urls = searchResults.map((result) => result.url);
 
-  const urlPromises: Promise<boolean>[] = urls.map((url) =>
-    isArticleUsed(url, userId, topic, reason)
+  const isUsedArray = await Promise.all(
+    urls.map((url) => isArticleUsed(url, userId, topic, reason))
   );
-  const isUsedArray: boolean[] = await Promise.all(urlPromises);
 
-  const newUrls: string[] = urls.filter((url, index) => !isUsedArray[index]);
+  const newUrls = urls.filter((_, index) => !isUsedArray[index]);
+  const rawTexts = await Promise.all(newUrls.map(scrapeWebContent));
 
-  const contentPromises: Promise<string>[] = newUrls.map((url) =>
-    scrapeWebContent(url)
-  );
-  const rawTexts: string[] = await Promise.all(contentPromises);
+  return rawTexts.map((rawText, index) => ({
+    url: newUrls[index],
+    text: cleanText(rawText),
+  }));
+};
 
-  return rawTexts.map((rawText, index) => {
-    const cleanedText: string = cleanText(rawText);
-    return {
-      url: newUrls[index],
-      text: cleanedText,
-    };
-  });
-}
-
-async function sortArticles(
+const sortArticles = async (
   articles: ArticleData[],
   topic: string,
   reason: string
-): Promise<ArticleData[]> {
+): Promise<ArticleData[]> => {
   const relevanceScores = await Promise.all(
-    articles.map((data) => getRelevanceScore(data.text, topic, reason))
+    articles.map(({ text }) => getRelevanceScore(text, topic, reason))
   );
 
   return articles
-    .map((data, index) => ({ ...data, relevanceScore: relevanceScores[index] }))
+    .map((article, index) => ({
+      ...article,
+      relevanceScore: relevanceScores[index],
+    }))
     .sort((a, b) => b.relevanceScore - a.relevanceScore);
-}
+};
 
 async function processAndSortArticles(
   topic: string,
@@ -103,7 +98,7 @@ async function processAndSortArticles(
 // It first generates an optimal Bing search query using GPT, then processes the data
 // from the search results, and finally creates a newsletter using the summarized text
 // and relevant URLs.
-async function generatePersonalizedContent(
+const generatePersonalizedContent = async (
   topic: string,
   reason: string,
   userId: string
@@ -111,60 +106,36 @@ async function generatePersonalizedContent(
   content: string;
   optimalSearchQuery: string;
   firstFourArticles: ArticleData[];
-}> {
-  // Generate the optimal Bing search query using GPT
-  const optimalSearchQuery: string = await generateOptimalBingSearchQuery(
+}> => {
+  const optimalSearchQuery = await generateOptimalBingSearchQuery(
     topic,
     reason
   );
-
-  console.log("Optimal search query: ", optimalSearchQuery);
-
-  const sortedArticles = await processAndSortArticles(
-    topic,
-    reason,
+  const sortedArticles = await processArticles(
     optimalSearchQuery,
-    userId
+    userId,
+    topic,
+    reason
   );
-
-  // Take only the first 4 most relevant articles
   const firstFourArticles = sortedArticles.slice(0, 4);
 
-  if (firstFourArticles.length === 0) {
-    throw new Error(
-      "No relevant articles found for the given search term and reason."
-    );
-  } else if (firstFourArticles.length < 4) {
-    console.warn(
-      "Fewer than 4 relevant articles found. The newsletter may be shorter than expected."
-    );
-  }
+  if (firstFourArticles.length === 0)
+    throw new Error("No relevant articles found.");
+  if (firstFourArticles.length < 4)
+    console.warn("Fewer than 4 articles found.");
 
-  console.log("First four articles: ", firstFourArticles);
-
-  // Generate a summarized text using GPT
-  const summarizedText: string = await generateSummaryWithGPT(
-    firstFourArticles.map((data) => data.text)
+  const summarizedText = await generateSummaryWithGPT(
+    firstFourArticles.map(({ text }) => text)
   );
-
-  console.log("Summarized text: ", summarizedText);
-
   const unsubscribeLink = `http://yourdomain.com/unsubscribe?userId=${userId}&email=recipient@email.com`;
+  const content = `${await generateNewsletterWithGPT(
+    topic,
+    reason,
+    summarizedText,
+    firstFourArticles.map(({ url }) => url)
+  )}\n\n[Unsubscribe](${unsubscribeLink})`;
 
-  // Create a newsletter using the summarized text
-  const content: string =
-    (await generateNewsletterWithGPT(
-      topic,
-      reason,
-      summarizedText,
-      firstFourArticles.map((data) => data.url)
-    )) + `\n\n[Unsubscribe](${unsubscribeLink})`;
-
-  return {
-    content: content,
-    optimalSearchQuery: optimalSearchQuery,
-    firstFourArticles: firstFourArticles,
-  };
-}
+  return { content, optimalSearchQuery, firstFourArticles };
+};
 
 export { isArticleUsed, processAndSortArticles, generatePersonalizedContent };
