@@ -6,7 +6,7 @@ config(); // Load environment variables from .env file
 const BING_API_KEY = process.env.BING_API_KEY as string;
 
 // This function queries the Bing Search API with a given search term and returns an array of search results.
-export async function queryBingSearchAPI(searchTerm: string) {
+export async function queryBingSearchAPI(topic: string) {
   return [
     { url: "http://dummy1.com" },
     { url: "http://dummy2.com" },
@@ -18,7 +18,7 @@ export async function queryBingSearchAPI(searchTerm: string) {
   //     'https://api.bing.microsoft.com/v7.0/search',
   //     {
   //       params: {
-  //         q: searchTerm,
+  //         q: topic,
   //       },
   //       headers: {
   //         'Ocp-Apim-Subscription-Key': BING_API_KEY,

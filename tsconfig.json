@@ -110,10 +110,10 @@
   "include": [
     "*.ts",
     "server/utils/utils.ts",
-    "server/dataProcessing.ts",
-    "server/server.ts",
+    "server/src/dataProcessing.ts",
+    "server/src/server.ts",
     "server/db/prisma/prismaClient.ts",
-    "services/bing/apiClients.ts",
+    "services/bing/bing.ts",
     "services/gpt/gpt.ts"
   ]
 }

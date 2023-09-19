@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "react-query";
 import LogoutButton from "./LogoutButton";
 import axios from "axios";
 import {
@@ -8,65 +9,60 @@ import {
   ListItem,
   Typography,
   Checkbox,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 
 const API_BASE_URL = "http://localhost:3001/api";
 
-const useFetchData = (endpoint, dependencies) => {
-  const [data, setData] = useState([]);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get(`${API_BASE_URL}/${endpoint}`);
-        if (response.data && Array.isArray(response.data.emailsToSendTo)) {
-          setData(response.data.emailsToSendTo);
-        }
-      } catch (error) {
-        console.error(`Failed to fetch data from ${endpoint}:`, error);
-      }
-    };
-    fetchData();
-  }, [endpoint, ...dependencies]);
-
-  return data;
+// Fetch emails
+const fetchEmails = async (id) => {
+  const response = await axios.get(`${API_BASE_URL}/get-emails?id=${id}`);
+  return response.data.emailsToSendTo;
 };
-
-const handleAPIRequest = async (
-  endpoint,
-  payload,
-  successMessage,
-  failureMessage
-) => {
-  try {
-    await axios.post(`${API_BASE_URL}/${endpoint}`, payload);
-    console.log(successMessage);
-  } catch (error) {
-    console.error(`${failureMessage}:`, error);
-  }
+// Fetch newsletters
+const fetchNewsletters = async (id) => {
+  const response = await axios.get(`${API_BASE_URL}/get-newsletters?id=${id}`);
+  return response.data;
 };
 
 const AuthenticatedApp = ({ user }) => {
+  const queryClient = useQueryClient();
   const [topic, setTopic] = useState("");
   const [reason, setReason] = useState("");
   const [selectedEmails, setSelectedEmails] = useState(new Set());
-  const [emailList, setEmailList] = useState([]);
   const [emailInput, setEmailInput] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedNewsletter, setSelectedNewsletter] = useState(null);
 
-  const [refreshFlag, setRefreshFlag] = useState(false);
+  // react-query for fetching emails
+  const { data: emailList, refetch: refetchEmails } = useQuery(
+    ["emails", user.sub],
+    () => fetchEmails(user.sub)
+  );
 
-  const fetchedEmailList = useFetchData(`get-emails?email=${user.email}`, [
-    user.email,
-    refreshFlag, // Add refreshFlag as a dependency
-  ]);
+  // react-query for fetching newsletters
+  const { data: newsletters } = useQuery(["newsletters", user.sub], () =>
+    fetchNewsletters(user.sub)
+  );
 
-  useEffect(() => {
-    setEmailList(fetchedEmailList);
-  }, [fetchedEmailList]);
-
-  const newsletters = useFetchData(`get-newsletters?email=${user.email}`, [
-    user.email,
-  ]);
+  // Mutation for creating a newsletter
+  const createNewsletterMutation = useMutation(
+    async (payload) => {
+      const response = await axios.post(
+        `${API_BASE_URL}/create-newsletter`,
+        payload
+      );
+      return response.data;
+    },
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(["newsletters", user.sub]);
+      },
+    }
+  );
 
   const handleAddEmailsClick = async () => {
     const isMultipleEmails = emailInput.includes(",");
@@ -75,14 +71,11 @@ const AuthenticatedApp = ({ user }) => {
       : [emailInput];
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/add-emails`, {
-        email: user.email,
+      await axios.post(`${API_BASE_URL}/add-emails`, {
+        id: user.sub,
         emailList: emailListToAdd,
       });
-
-      if (response.data && Array.isArray(response.data.updatedEmails)) {
-        setEmailList(response.data.updatedEmails);
-      }
+      refetchEmails(); // Refetch Manually
     } catch (error) {
       console.error(
         `Failed to add emails: ${emailListToAdd.join(", ")}`,
@@ -104,16 +97,25 @@ const AuthenticatedApp = ({ user }) => {
   const handleDeleteSelectedEmails = async () => {
     try {
       await axios.post(`${API_BASE_URL}/delete-selected-emails`, {
-        email: user.email,
+        id: user.sub,
         emailsToDelete: Array.from(selectedEmails),
       });
       console.log("Deleted selected emails");
-      setRefreshFlag(!refreshFlag); // Flip the flag to trigger re-fetch
+      // Refresh the email list
+      refetchEmails();
     } catch (error) {
       console.error("Failed to delete selected emails:", error);
     }
   };
 
+  const deleteNewsletter = async (id) => {
+    try {
+      await axios.delete(`${API_BASE_URL}/delete-newsletter/${id}`);
+      queryClient.invalidateQueries(["newsletters", user.sub]);
+    } catch (error) {
+      console.error(`Failed to delete newsletter with ID ${id}`, error);
+    }
+  };
   return (
     <>
       <LogoutButton />
@@ -131,14 +133,13 @@ const AuthenticatedApp = ({ user }) => {
         <Button
           variant="contained"
           color="primary"
-          onClick={() =>
-            handleAPIRequest(
-              "create-newsletter",
-              { email: user.email, topic, reason },
-              "Newsletter created",
-              "Failed to create newsletter"
-            )
-          }
+          onClick={() => {
+            createNewsletterMutation.mutate({
+              id: user.sub,
+              topic,
+              reason,
+            });
+          }}
         >
           Create Newsletter
         </Button>
@@ -146,12 +147,33 @@ const AuthenticatedApp = ({ user }) => {
       <div>
         <Typography variant="h6">Your Newsletters</Typography>
         <List>
-          {newsletters.map((newsletter, index) => (
-            <ListItem key={index}>
-              <Typography variant="h6">{newsletter.title}</Typography>
-              <Typography variant="body2">{newsletter.content}</Typography>
-            </ListItem>
-          ))}
+          {Array.isArray(newsletters) &&
+            newsletters.map((newsletter, index) => (
+              <ListItem
+                key={index}
+                onClick={() => {
+                  setSelectedNewsletter(newsletter);
+                  setIsModalOpen(true);
+                }}
+              >
+                <Typography variant="h6" style={{ marginRight: "4px" }}>
+                  {newsletter.topic}
+                </Typography>
+                <Typography variant="h6" style={{ marginRight: "12px" }}>
+                  {newsletter.reason}
+                </Typography>
+                <Button
+                  variant="contained"
+                  color="secondary"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteNewsletter(newsletter.id);
+                  }}
+                >
+                  Delete
+                </Button>
+              </ListItem>
+            ))}
         </List>
       </div>
       <div style={{ margin: "20px 0" }}>
@@ -182,7 +204,7 @@ const AuthenticatedApp = ({ user }) => {
         </Button>
       </div>
       <div>
-        <Typography variant="h6">Emails to Send To</Typography>
+        <Typography variant="h6">Emails to Send To:</Typography>
         <List>
           {Array.isArray(emailList) &&
             emailList.map((email, index) => (
@@ -196,6 +218,18 @@ const AuthenticatedApp = ({ user }) => {
             ))}
         </List>
       </div>
+      <Dialog open={isModalOpen} onClose={() => setIsModalOpen(false)}>
+        <DialogTitle>{selectedNewsletter?.searchQuery}</DialogTitle>
+        <DialogContent>
+          <Typography variant="body1">{selectedNewsletter?.content}</Typography>{" "}
+          {/* Here's where we display the content */}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setIsModalOpen(false)} color="primary">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 };

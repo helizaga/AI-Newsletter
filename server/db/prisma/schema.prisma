@@ -8,23 +8,26 @@ generator client {
 }
 
 model User {
-  id              Int           @id @default(autoincrement())
-  userEmail       String        @unique
+  id              String        @id @default(uuid())
+  userEmail       String       @unique
   name            String?
   newsletters     Newsletter[]
   emailsToSendTo  Json
 }
 
+
 model Newsletter {
   id              Int          @id @default(autoincrement())
   title           String
-  content         String
-  sentDate        DateTime
-  userId          Int
-  searchTerm      String
+  content         String       
+  sentDate        DateTime     @default(now())
+  userId          String
+  topic           String
   reason          String
+  searchQuery     String?
+  history         NewsletterHistory[]
   user            User         @relation(fields: [userId], references: [id])
-  usedArticles    UsedArticle[]
+  usedArticles    UsedArticle[] @relation("UsedArticleToNewsletter")
 }
 
 model UsedArticle {
@@ -32,5 +35,13 @@ model UsedArticle {
   url             String
   newsletterId    Int
   createdAt       DateTime  @default(now())
-  newsletter      Newsletter @relation(fields: [newsletterId], references: [id])
+  newsletter      Newsletter @relation("UsedArticleToNewsletter", fields: [newsletterId], references: [id], onDelete: Cascade)
+}
+
+model NewsletterHistory {
+  id              Int          @id @default(autoincrement())
+  newsletterId    Int
+  content         String
+  sentDate        DateTime     @default(now())
+  newsletter      Newsletter   @relation(fields: [newsletterId], references: [id], onDelete: Cascade)
 }

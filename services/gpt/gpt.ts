@@ -137,7 +137,7 @@ async function generateSummaryWithGPT(
 // search term, reason, summarized text, and URLs. The newsletter is in the style
 // of a Medium post and includes several sections, each teaching the reader something new.
 async function generateNewsletterWithGPT(
-  searchTerm: string,
+  topic: string,
   reason: string,
   summarizedText: string,
   urls: string[]
@@ -156,7 +156,7 @@ async function generateNewsletterWithGPT(
     },
     {
       role: "user",
-      content: `Write a newsletter about ${searchTerm} using the following summarized text and URLs:
+      content: `Write a newsletter about ${topic} using the following summarized text and URLs:
       - Summarized text: ${summarizedText}
       - URLs: ${JSON.stringify(urls)}
       - I want this newsletter because ${reason}.`,

@@ -1,7 +1,7 @@
 import express, { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import cors from "cors";
-import { generatePersonalizedContent } from "./dataProcessing";
+import { generatePersonalizedContent, isArticleUsed } from "./dataProcessing";
 
 const app = express();
 const prisma = new PrismaClient();
@@ -11,76 +11,73 @@ const PORT = 3001;
 app.use(express.json());
 app.use(cors());
 
-// Server Listener
+// Server initialization
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
 
-// Routes
+// API Endpoints
 app.get("/unsubscribe", unsubscribeHandler);
 app.post("/api/update-user", updateUserHandler);
-app.route("/api/create-newsletter").post(createNewsletterHandler);
+app.post("/api/create-newsletter", createNewsletterHandler);
+app.get("/api/get-newsletters", getNewslettersHandler);
+app.get("/api/get-emails", getEmailsHandler);
+app.post("/api/delete-selected-emails", deleteSelectedEmailsHandler);
+app.delete("/api/delete-newsletter/:id", deleteNewsletterHandler);
+app.post("/api/add-emails", addEmailsHandler);
 
-app.get("/api/get-newsletters", async (req: Request, res: Response) => {
-  const email = req.query.email;
-  if (typeof email !== "string") {
-    return res.status(400).json({ error: "Invalid email query parameter" });
+// Handlers
+async function getNewslettersHandler(req: Request, res: Response) {
+  const id = req.query.id as string; // Type assertion here
+
+  if (typeof id !== "string") {
+    // Runtime type check
+    return res.status(400).json({ error: "Invalid id query parameter" });
   }
+
   const newsletters = await prisma.newsletter.findMany({
-    where: { user: { userEmail: email } },
+    where: { user: { id: id } },
   });
   res.json(newsletters);
-});
+}
 
-app.get("/api/get-emails", async (req: Request, res: Response) => {
-  const email = req.query.email;
-  if (typeof email !== "string") {
+async function getEmailsHandler(req: Request, res: Response) {
+  const id = req.query.id;
+  if (typeof id !== "string") {
     return res.status(400).json({ error: "Invalid email query parameter" });
   }
-
   const user = await prisma.user.findUnique({
-    where: { userEmail: email },
+    where: { id: id },
   });
-
   if (!user) {
     return res.status(404).json({ error: "User not found" });
   }
-
   res.json({ emailsToSendTo: user.emailsToSendTo });
-});
+}
 
-// Add this to your existing list of routes
-app.post("/api/delete-selected-emails", deleteSelectedEmailsHandler);
-
-app.post("/api/create-newsletter", async (req: Request, res: Response) => {
-  const { email, topic, reason } = req.body;
+async function deleteNewsletterHandler(req: Request, res: Response) {
+  const { id } = req.params;
   try {
-    const user = await prisma.user.findUnique({ where: { userEmail: email } });
-    if (user) {
-      const content = await generatePersonalizedContent(topic, reason, user.id);
-      res.status(200).json({ message: "Newsletter created", content });
-    } else {
-      res.status(404).json({ error: "User not found" });
-    }
+    await prisma.newsletter.delete({
+      where: { id: Number(id) },
+    });
+    res.status(200).json({ message: "Successfully deleted newsletter" });
   } catch (error) {
-    console.error("Error in create-newsletter:", error);
+    console.error("Error in delete-newsletter:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
-});
+}
 
-app.post("/api/add-emails", addEmailsHandler);
-
-// Add this function with your other handlers
 async function deleteSelectedEmailsHandler(req: Request, res: Response) {
-  const { email, emailsToDelete } = req.body;
+  const { id, emailsToDelete } = req.body;
 
-  if (!email || !Array.isArray(emailsToDelete)) {
+  if (!id || !Array.isArray(emailsToDelete)) {
     return res.status(400).json({ error: "Invalid payload" });
   }
 
   try {
     const user = await prisma.user.findUnique({
-      where: { userEmail: email },
+      where: { id: id },
     });
 
     if (!user || !Array.isArray(user.emailsToSendTo)) {
@@ -96,7 +93,7 @@ async function deleteSelectedEmailsHandler(req: Request, res: Response) {
 
     // Update the user's emails
     await prisma.user.update({
-      where: { userEmail: email },
+      where: { id: id },
       data: { emailsToSendTo: updatedEmails },
     });
 
@@ -107,7 +104,6 @@ async function deleteSelectedEmailsHandler(req: Request, res: Response) {
   }
 }
 
-// Handlers
 async function unsubscribeHandler(
   req: Request,
   res: Response
@@ -123,14 +119,14 @@ async function unsubscribeHandler(
 
   try {
     const user = await prisma.user.findUnique({
-      where: { id: Number(userId) },
+      where: { id: userId },
     });
 
     if (user && user.emailsToSendTo) {
       const emailsArray = user.emailsToSendTo as string[]; // Type casting
       const updatedEmailsToSendTo = emailsArray.filter((e) => e !== email);
       await prisma.user.update({
-        where: { id: Number(userId) },
+        where: { id: userId },
         data: { emailsToSendTo: updatedEmailsToSendTo },
       });
       return res.status(200).json({ message: "Successfully unsubscribed." });
@@ -146,12 +142,17 @@ async function unsubscribeHandler(
 }
 
 async function updateUserHandler(req: Request, res: Response): Promise<void> {
-  const { email, name } = req.body;
+  const { id, email, name } = req.body;
+
+  if (id == null || email == null) {
+    res.status(400).json({ message: "Invalid id or email" });
+    return;
+  }
 
   await prisma.user.upsert({
-    where: { userEmail: email },
-    update: { name },
-    create: { userEmail: email, name, emailsToSendTo: [email] },
+    where: { id: id },
+    update: { name, userEmail: email },
+    create: { id: id, name, userEmail: email, emailsToSendTo: [email] },
   });
 
   res.status(200).json({ message: "User updated successfully" });
@@ -159,10 +160,44 @@ async function updateUserHandler(req: Request, res: Response): Promise<void> {
 
 async function createNewsletterHandler(req: Request, res: Response) {
   try {
-    const { email, topic, reason } = req.body;
-    const user = await prisma.user.findUnique({ where: { userEmail: email } });
+    const { id, topic, reason } = req.body;
+    const user = await prisma.user.findUnique({ where: { id: id } });
     if (user) {
-      const content = await generatePersonalizedContent(topic, reason, user.id);
+      const { content, optimalSearchQuery, firstFourArticles } =
+        await generatePersonalizedContent(topic, reason, user.id);
+      const newsletter = await prisma.newsletter.create({
+        data: {
+          userId: user.id,
+          topic: topic,
+          reason: reason,
+          title: `Newsletter: ${optimalSearchQuery} - ${new Date().toISOString()}`,
+          searchQuery: optimalSearchQuery,
+          content: content,
+          history: {
+            create: { content: content },
+          },
+        },
+      });
+
+      // Update the UsedArticle table with certain conditions. i don't want this updated when an article is seen before by the same admin for the same topic and reason.
+      await Promise.all(
+        firstFourArticles.map(async (article) => {
+          if (!(await isArticleUsed(article.url, user.id, topic, reason))) {
+            return prisma.usedArticle.create({
+              data: {
+                url: article.url,
+                newsletterId: newsletter.id,
+                createdAt: new Date(),
+              },
+            });
+          }
+        })
+      );
+
+      console.log(
+        "Created new newsletter from createNewsletterHandler: ",
+        newsletter
+      );
       return res.status(200).json({ message: "Newsletter created", content });
     }
     return res.status(404).json({ error: "User not found" });
@@ -175,15 +210,15 @@ async function createNewsletterHandler(req: Request, res: Response) {
 async function addEmailsHandler(req: Request, res: Response) {
   console.log("Received payload:", req.body);
 
-  const { email, emailList } = req.body;
+  const { id, emailList } = req.body;
 
-  if (!email || !Array.isArray(emailList)) {
+  if (!id || !Array.isArray(emailList)) {
     return res.status(400).json({ error: "Invalid payload" });
   }
 
   try {
     const user = await prisma.user.findUnique({
-      where: { userEmail: email },
+      where: { id: id },
     });
 
     if (!user || !Array.isArray(user.emailsToSendTo)) {
@@ -197,7 +232,7 @@ async function addEmailsHandler(req: Request, res: Response) {
 
     // Update the user's emails
     await prisma.user.update({
-      where: { userEmail: email },
+      where: { id: id },
       data: { emailsToSendTo: updatedEmails },
     });
 

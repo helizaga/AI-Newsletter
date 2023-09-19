@@ -1,12 +1,12 @@
-import { queryBingSearchAPI } from "../services/bing/apiClients";
-import { scrapeWebContent, cleanText } from "./utils/utils";
-import { prisma } from "./db/prisma/prismaClient";
-import { getRelevanceScore } from "../services/gpt/gpt";
+import { queryBingSearchAPI } from "../../services/bing/bing";
+import { scrapeWebContent, cleanText } from "../utils/utils";
+import { prisma } from "../db/prisma/prismaClient";
+import { getRelevanceScore } from "../../services/gpt/gpt";
 import {
   generateSummaryWithGPT,
   generateNewsletterWithGPT,
   generateOptimalBingSearchQuery,
-} from "../services/gpt/gpt";
+} from "../../services/gpt/gpt";
 
 interface ArticleData {
   url: string;
@@ -16,7 +16,7 @@ interface ArticleData {
 // dataProcessing.ts
 async function isArticleUsed(
   url: string,
-  userId: number,
+  userId: string,
   topic: string,
   reason: string
 ): Promise<boolean> {
@@ -25,7 +25,7 @@ async function isArticleUsed(
       url: url,
       newsletter: {
         userId: userId,
-        searchTerm: topic,
+        topic: topic,
         reason: reason,
       },
     },
@@ -36,7 +36,7 @@ async function isArticleUsed(
 
 async function processArticles(
   optimalSearchQuery: string,
-  userId: number,
+  userId: string,
   topic: string,
   reason: string
 ): Promise<ArticleData[]> {
@@ -66,11 +66,11 @@ async function processArticles(
 
 async function sortArticles(
   articles: ArticleData[],
-  searchTerm: string,
+  topic: string,
   reason: string
 ): Promise<ArticleData[]> {
   const relevanceScores = await Promise.all(
-    articles.map((data) => getRelevanceScore(data.text, searchTerm, reason))
+    articles.map((data) => getRelevanceScore(data.text, topic, reason))
   );
 
   return articles
@@ -79,13 +79,13 @@ async function sortArticles(
 }
 
 async function processAndSortArticles(
-  searchTerm: string,
+  topic: string,
   reason: string,
   optimalSearchQuery: string,
-  userId: number
+  userId: string
 ): Promise<ArticleData[]> {
   // const processedArticles = await processArticles(optimalSearchQuery, userId);
-  // return sortArticles(processedArticles, searchTerm, reason);
+  // return sortArticles(processedArticles, topic, reason);
   console.log("Dummy Processing and Sorting Articles");
   return [
     {
@@ -104,20 +104,24 @@ async function processAndSortArticles(
 // from the search results, and finally creates a newsletter using the summarized text
 // and relevant URLs.
 async function generatePersonalizedContent(
-  searchTerm: string,
+  topic: string,
   reason: string,
-  userId: number
-): Promise<string> {
+  userId: string
+): Promise<{
+  content: string;
+  optimalSearchQuery: string;
+  firstFourArticles: ArticleData[];
+}> {
   // Generate the optimal Bing search query using GPT
   const optimalSearchQuery: string = await generateOptimalBingSearchQuery(
-    searchTerm,
+    topic,
     reason
   );
 
   console.log("Optimal search query: ", optimalSearchQuery);
 
   const sortedArticles = await processAndSortArticles(
-    searchTerm,
+    topic,
     reason,
     optimalSearchQuery,
     userId
@@ -150,41 +154,17 @@ async function generatePersonalizedContent(
   // Create a newsletter using the summarized text
   const content: string =
     (await generateNewsletterWithGPT(
-      searchTerm,
+      topic,
       reason,
       summarizedText,
       firstFourArticles.map((data) => data.url)
     )) + `\n\n[Unsubscribe](${unsubscribeLink})`;
 
-  // Create a new newsletter in the database
-  const newsletter = await prisma.newsletter.create({
-    data: {
-      title: `Newsletter: ${optimalSearchQuery} - ${new Date().toISOString()}`,
-      content: content,
-      sentDate: new Date(),
-      userId: userId,
-      searchTerm: searchTerm,
-      reason: reason,
-    },
-  });
-
-  console.log("Created new newsletter: ", newsletter);
-
-  // Update the UsedArticle table with certain conditions. i don't want this updated when an article is seen before by the same admin for the same topic and reason.
-  await Promise.all(
-    firstFourArticles.map(async (article) => {
-      if (!(await isArticleUsed(article.url, userId, searchTerm, reason))) {
-        return prisma.usedArticle.create({
-          data: {
-            url: article.url,
-            newsletterId: newsletter.id,
-            createdAt: new Date(),
-          },
-        });
-      }
-    })
-  );
-  return content;
+  return {
+    content: content,
+    optimalSearchQuery: optimalSearchQuery,
+    firstFourArticles: firstFourArticles,
+  };
 }
 
-export { processAndSortArticles, generatePersonalizedContent };
+export { isArticleUsed, processAndSortArticles, generatePersonalizedContent };

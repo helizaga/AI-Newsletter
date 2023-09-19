@@ -2,7 +2,7 @@ import { PrismaClient } from "@prisma/client";
 export const prisma = new PrismaClient();
 
 export async function importEmailList(
-  userId: number,
+  userId: string,
   newEmailList: string[]
 ): Promise<void> {
   const user = await prisma.user.findUnique({
@@ -20,7 +20,7 @@ export async function importEmailList(
 }
 
 export async function addSingleEmail(
-  userId: number,
+  userId: string,
   newEmail: string
 ): Promise<void> {
   const user = await prisma.user.findUnique({
