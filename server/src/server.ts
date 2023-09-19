@@ -2,10 +2,14 @@ import express, { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import cors from "cors";
 import { generatePersonalizedContent, isArticleUsed } from "./dataProcessing";
+import AWS from "aws-sdk";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const app = express();
 const prisma = new PrismaClient();
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(express.json());
@@ -16,6 +20,15 @@ app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
 
+AWS.config.update({
+  region: process.env.AWS_REGION,
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+});
+
+// Initialize SES
+const ses = new AWS.SES();
+
 // API Endpoints
 app.get("/unsubscribe", unsubscribeHandler);
 app.post("/api/update-user", updateUserHandler);
@@ -25,8 +38,63 @@ app.get("/api/get-emails", getEmailsHandler);
 app.post("/api/delete-selected-emails", deleteSelectedEmailsHandler);
 app.delete("/api/delete-newsletter/:id", deleteNewsletterHandler);
 app.post("/api/add-emails", addEmailsHandler);
+app.post("/api/send-newsletter", sendNewsletterHandler);
 
 // Handlers
+async function sendNewsletterHandler(req: Request, res: Response) {
+  console.log("Received in sendNewsletterHandler:", req.body);
+
+  const { newsletterId } = req.body;
+
+  if (!newsletterId) {
+    return res.status(400).json({ error: "Invalid payload" });
+  }
+
+  try {
+    // Fetch the newsletter content and user information using Prisma
+    const newsletter = await prisma.newsletter.findUnique({
+      where: { id: Number(newsletterId) },
+      include: { user: true },
+    });
+
+    if (!newsletter || !newsletter.user || !newsletter.user.emailsToSendTo) {
+      return res.status(404).json({ error: "Newsletter or user not found" });
+    }
+
+    const toAddresses = newsletter.user.emailsToSendTo as string[];
+
+    // Configure email parameters
+    const params = {
+      Source: "tom.elizaga@gmail.com",
+      Destination: {
+        ToAddresses: toAddresses,
+      },
+      Message: {
+        Subject: { Data: newsletter.title },
+        Body: { Text: { Data: newsletter.content } },
+      },
+    };
+
+    // Send email via AWS SES
+    try {
+      ses.sendEmail(params, function (err, data) {
+        if (err) {
+          throw err;
+        }
+        return res
+          .status(200)
+          .json({ message: "Newsletter sent successfully", data });
+      });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Failed to send email" });
+    }
+  } catch (error) {
+    console.error("Error in send-newsletter:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+}
+
 async function getNewslettersHandler(req: Request, res: Response) {
   const id = req.query.id as string; // Type assertion here
 
