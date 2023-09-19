@@ -1,6 +1,6 @@
 datasource db {
   provider = "postgresql"
-  url      = "postgresql://postgres:password@localhost:5433/ainewsletter"
+  url      = env("DATABASE_URL")
 }
 
 generator client {

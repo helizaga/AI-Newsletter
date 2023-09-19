@@ -36,6 +36,8 @@ const AuthenticatedApp = ({ user }) => {
   const [emailInput, setEmailInput] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedNewsletter, setSelectedNewsletter] = useState(null);
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
+  const [newsletterToBeSent, setNewsletterToBeSent] = useState(null);
 
   // react-query for fetching emails
   const { data: emailList, refetch: refetchEmails } = useQuery(
@@ -116,6 +118,28 @@ const AuthenticatedApp = ({ user }) => {
       console.error(`Failed to delete newsletter with ID ${id}`, error);
     }
   };
+
+  const sendNewsletter = async (newsletterId) => {
+    try {
+      await axios.post(`${API_BASE_URL}/send-newsletter`, { newsletterId });
+      console.log(`Newsletter with ID ${newsletterId} sent`);
+    } catch (error) {
+      console.error(`Failed to send newsletter with ID ${newsletterId}`, error);
+    }
+  };
+
+  const handleSendNewsletterClick = (newsletterId) => {
+    setNewsletterToBeSent(newsletterId);
+    setIsConfirmDialogOpen(true);
+  };
+
+  const confirmSendNewsletter = () => {
+    if (newsletterToBeSent !== null) {
+      sendNewsletter(newsletterToBeSent);
+    }
+    setIsConfirmDialogOpen(false);
+  };
+
   return (
     <>
       <LogoutButton />
@@ -149,19 +173,31 @@ const AuthenticatedApp = ({ user }) => {
         <List>
           {Array.isArray(newsletters) &&
             newsletters.map((newsletter, index) => (
-              <ListItem
-                key={index}
-                onClick={() => {
-                  setSelectedNewsletter(newsletter);
-                  setIsModalOpen(true);
-                }}
-              >
-                <Typography variant="h6" style={{ marginRight: "4px" }}>
-                  {newsletter.topic}
-                </Typography>
-                <Typography variant="h6" style={{ marginRight: "12px" }}>
-                  {newsletter.reason}
-                </Typography>
+              <ListItem key={index}>
+                <div
+                  onClick={() => {
+                    setSelectedNewsletter(newsletter);
+                    setIsModalOpen(true);
+                  }}
+                  style={{ cursor: "pointer" }}
+                >
+                  <Typography variant="h6" style={{ marginRight: "4px" }}>
+                    {newsletter.topic}
+                  </Typography>
+                  <Typography variant="h6" style={{ marginRight: "12px" }}>
+                    {newsletter.reason}
+                  </Typography>
+                </div>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSendNewsletterClick(newsletter.id);
+                  }}
+                >
+                  Send
+                </Button>
                 <Button
                   variant="contained"
                   color="secondary"
@@ -194,15 +230,7 @@ const AuthenticatedApp = ({ user }) => {
           Add Email(s)
         </Button>
       </div>
-      <div>
-        <Button
-          variant="contained"
-          color="secondary"
-          onClick={handleDeleteSelectedEmails} // Use the new handler
-        >
-          Delete Selected Emails
-        </Button>
-      </div>
+
       <div>
         <Typography variant="h6">Emails to Send To:</Typography>
         <List>
@@ -218,6 +246,16 @@ const AuthenticatedApp = ({ user }) => {
             ))}
         </List>
       </div>
+      <div>
+        <Button
+          variant="contained"
+          color="secondary"
+          onClick={handleDeleteSelectedEmails} // Use the new handler
+          disabled={selectedEmails.size === 0} // Disable the button if no emails are selected
+        >
+          Delete Selected Emails
+        </Button>
+      </div>
       <Dialog open={isModalOpen} onClose={() => setIsModalOpen(false)}>
         <DialogTitle>{selectedNewsletter?.searchQuery}</DialogTitle>
         <DialogContent>
@@ -227,6 +265,28 @@ const AuthenticatedApp = ({ user }) => {
         <DialogActions>
           <Button onClick={() => setIsModalOpen(false)} color="primary">
             Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog
+        open={isConfirmDialogOpen}
+        onClose={() => setIsConfirmDialogOpen(false)}
+      >
+        <DialogTitle>Confirm Send</DialogTitle>
+        <DialogContent>
+          <Typography variant="body1">
+            Are you sure you want to send this newsletter?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setIsConfirmDialogOpen(false)}
+            color="secondary"
+          >
+            Cancel
+          </Button>
+          <Button onClick={confirmSendNewsletter} color="primary">
+            Confirm
           </Button>
         </DialogActions>
       </Dialog>
