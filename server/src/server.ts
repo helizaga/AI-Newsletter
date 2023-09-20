@@ -40,6 +40,89 @@ app.post("/api/delete-selected-emails", deleteSelectedEmailsHandler);
 app.delete("/api/delete-newsletter/:id", deleteNewsletterHandler);
 app.post("/api/add-emails", addEmailsHandler);
 app.post("/api/send-newsletter", sendNewsletterHandler);
+app.post("/api/regenerate-newsletter", regenerateNewsletterHandler);
+
+async function regenerateNewsletterHandler(req: Request, res: Response) {
+  const { newsletterId, userId } = req.body;
+  console.log(newsletterId, userId);
+  if (!newsletterId || !userId) {
+    return res.status(400).json({ error: "Invalid payload" });
+  }
+
+  try {
+    const newsletter = await prisma.newsletter.findUnique({
+      where: { id: Number(newsletterId) },
+      include: { contentHistory: true },
+    });
+
+    if (!newsletter) {
+      return res.status(404).json({ error: "Newsletter not found" });
+    }
+
+    const usedArticles = await prisma.usedArticle.findMany({
+      where: {
+        userId: userId,
+        topic: newsletter.topic,
+        reason: newsletter.reason,
+      },
+    });
+
+    const usedArticleSet = new Set(usedArticles.map((article) => article.url));
+
+    // Regenerate content using your existing logic.
+    const { content, firstFourArticles } = await generatePersonalizedContent(
+      newsletter.topic,
+      newsletter.reason,
+      userId,
+      usedArticleSet // Pass this as an additional parameter
+    );
+
+    // Update the content history and regenerateCount
+    const updatedNewsletter = await prisma.newsletter.update({
+      where: { id: Number(newsletterId) },
+      data: {
+        content: content,
+        contentHistory: {
+          create: { content: content },
+        },
+        regenerateCount: {
+          increment: 1,
+        },
+      },
+    });
+
+    await Promise.all(
+      firstFourArticles.map(async (article) => {
+        if (
+          !(await isArticleUsed(
+            article.url,
+            userId,
+            newsletter.topic,
+            newsletter.reason
+          ))
+        ) {
+          return prisma.usedArticle.create({
+            data: {
+              url: article.url,
+              newsletterId: Number(newsletterId),
+              userId: userId,
+              topic: newsletter.topic,
+              reason: newsletter.reason,
+              createdAt: new Date(),
+            },
+          });
+        }
+      })
+    );
+
+    return res
+      .status(200)
+      .json({ message: "Newsletter content regenerated", updatedNewsletter });
+  } catch (error) {
+    console.error("Error in regenerate-newsletter:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+}
 
 // Handlers
 async function sendNewsletterHandler(req: Request, res: Response) {
@@ -237,8 +320,22 @@ async function createNewsletterHandler(req: Request, res: Response) {
     const { id, topic, reason } = req.body;
     const user = await prisma.user.findUnique({ where: { id: id } });
     if (user) {
+      // Fetch the set of used articles for this user, topic, and reason
+      const usedArticles = await prisma.usedArticle.findMany({
+        where: {
+          userId: user.id,
+          topic: topic,
+          reason: reason,
+        },
+      });
+      const usedArticleSet = new Set(usedArticles.map((ua) => ua.url));
       const { content, optimalSearchQuery, firstFourArticles } =
-        await generatePersonalizedContent(topic, reason, user.id);
+        await generatePersonalizedContent(
+          topic,
+          reason,
+          user.id,
+          usedArticleSet
+        );
       const newsletter = await prisma.newsletter.create({
         data: {
           userId: user.id,
@@ -247,7 +344,7 @@ async function createNewsletterHandler(req: Request, res: Response) {
           title: `Newsletter: ${optimalSearchQuery} - ${new Date().toISOString()}`,
           searchQuery: optimalSearchQuery,
           content: content,
-          history: {
+          contentHistory: {
             create: { content: content },
           },
         },
@@ -261,6 +358,9 @@ async function createNewsletterHandler(req: Request, res: Response) {
               data: {
                 url: article.url,
                 newsletterId: newsletter.id,
+                userId: user.id,
+                topic: topic,
+                reason: reason,
                 createdAt: new Date(),
               },
             });

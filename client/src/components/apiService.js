@@ -41,3 +41,11 @@ export const deleteNewsletter = async (id) => {
 export const sendNewsletter = async (newsletterId) => {
   await axios.post(`${API_BASE_URL}/send-newsletter`, { newsletterId });
 };
+
+export const regenerateNewsletter = async (newsletterId, userId) => {
+  const response = await axios.post(`${API_BASE_URL}/regenerate-newsletter`, {
+    newsletterId,
+    userId,
+  });
+  return response.data;
+};

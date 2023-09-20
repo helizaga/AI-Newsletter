@@ -2,7 +2,11 @@
 import React, { useState } from "react";
 import { useQueryClient } from "react-query";
 import { List, ListItem, Button, Typography } from "@mui/material";
-import { deleteNewsletter, sendNewsletter } from "./apiService";
+import {
+  deleteNewsletter,
+  sendNewsletter,
+  regenerateNewsletter,
+} from "./apiService";
 import ConfirmSendDialog from "./ConfirmSendDialog";
 import NewsletterDetailDialog from "./NewsletterDetailDialog";
 import ConfirmDeleteDialog from "./ConfirmDeleteDialog";
@@ -21,12 +25,34 @@ const NewsletterList = ({ newsletters, user }) => {
     }
   };
 
-  const handleDeleteNewsletter = async (id) => {
+  const handleDeleteNewsletter = async (newsletterId) => {
     try {
-      await deleteNewsletter(id);
+      await deleteNewsletter(newsletterId);
       queryClient.invalidateQueries(["newsletters", user.sub]);
     } catch (error) {
-      console.error(`Failed to delete newsletter with ID ${id}`, error);
+      console.error(
+        `Failed to delete newsletter with ID ${newsletterId}`,
+        error
+      );
+    }
+  };
+
+  const handleRegenerateNewsletter = async (newsletterId, userId) => {
+    console.log(newsletterId, userId);
+    try {
+      const regeneratedNewsletter = await regenerateNewsletter(
+        newsletterId,
+        userId
+      );
+      console.log(
+        `Newsletter with ID ${newsletterId} regenerated`,
+        regeneratedNewsletter
+      );
+    } catch (error) {
+      console.error(
+        `Failed to regenerate newsletter with ID ${newsletterId}`,
+        error
+      );
     }
   };
 
@@ -57,6 +83,16 @@ const NewsletterList = ({ newsletters, user }) => {
               <ConfirmSendDialog
                 onConfirm={() => handleSendNewsletterClick(newsletter.id)}
               />
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() =>
+                  handleRegenerateNewsletter(newsletter.id, user.sub)
+                }
+              >
+                Regenerate
+              </Button>
+
               <Button
                 variant="contained"
                 color="secondary"

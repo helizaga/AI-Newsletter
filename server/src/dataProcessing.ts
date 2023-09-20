@@ -23,14 +23,11 @@ async function isArticleUsed(
   const usedArticle = await prisma.usedArticle.findFirst({
     where: {
       url: url,
-      newsletter: {
-        userId: userId,
-        topic: topic,
-        reason: reason,
-      },
+      userId: userId, // new field
+      topic: topic, // new field
+      reason: reason, // new field
     },
   });
-
   return Boolean(usedArticle);
 }
 
@@ -91,6 +88,14 @@ async function processAndSortArticles(
       url: "http://dummy2.com",
       text: "Dummy article 2",
     },
+    {
+      url: "http://dummy3.com",
+      text: "Dummy article 3",
+    },
+    {
+      url: "http://dummy4.com",
+      text: "Dummy article 4",
+    },
   ];
 }
 
@@ -101,33 +106,50 @@ async function processAndSortArticles(
 const generatePersonalizedContent = async (
   topic: string,
   reason: string,
-  userId: string
+  userId: string,
+  usedArticleSet: Set<string> // New parameter
 ): Promise<{
   content: string;
   optimalSearchQuery: string;
   firstFourArticles: ArticleData[];
 }> => {
+  console.log("Used articles:", usedArticleSet);
+
   const optimalSearchQuery = await generateOptimalBingSearchQuery(
     topic,
     reason
   );
-  const sortedArticles = await processArticles(
+  const sortedArticles = await processAndSortArticles(
     optimalSearchQuery,
     userId,
     topic,
     reason
   );
-  const firstFourArticles = sortedArticles.slice(0, 4);
 
-  if (firstFourArticles.length === 0)
+  // Filter out articles that have been used before
+  const newArticles = sortedArticles.filter(
+    (article) => !usedArticleSet.has(article.url)
+  );
+
+  console.log("Sorted Articles:", sortedArticles);
+  console.log("New Articles:", newArticles);
+
+  const firstFourArticles = newArticles.slice(0, 4);
+  console.log(firstFourArticles);
+
+  if (firstFourArticles.length === 0) {
     throw new Error("No relevant articles found.");
-  if (firstFourArticles.length < 4)
+  }
+
+  if (firstFourArticles.length < 4) {
     console.warn("Fewer than 4 articles found.");
+  }
 
   const summarizedText = await generateSummaryWithGPT(
     firstFourArticles.map(({ text }) => text)
   );
   const unsubscribeLink = `http://yourdomain.com/unsubscribe?userId=${userId}&email=recipient@email.com`;
+
   const content = `${await generateNewsletterWithGPT(
     topic,
     reason,
