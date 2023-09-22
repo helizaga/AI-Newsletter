@@ -6,6 +6,8 @@
 2. [Backend](#backend)
    - [Database Schema](#database-schema)
    - [Core Functionalities](#core-functionalities)
+   - [Server Implementation](#server-implementation)
+   - [API Endpoints](#api-endpoints)
    - [AI Integration](#ai-integration)
 3. [Frontend](#frontend)
    - [Dependencies](#dependencies)
