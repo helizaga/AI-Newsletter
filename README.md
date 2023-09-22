@@ -1,76 +1,129 @@
-# Personalized Content Generator
-
-This project is a personalized content generator that utilizes GPT-3.5 and Bing Search API to create customized newsletters for users based on their interests and preferences. The generator scrapes web content, processes the data, and generates summaries using GPT-3.5. It then creates a comprehensive and engaging newsletter in the style of a Medium post.
+# Monorepo Project for AI-Driven Personalized Newsletters
 
 ## Table of Contents
-1. [Features](#features)
-2. [Dependencies](#dependencies)
-3. [Installation](#installation)
-4. [Usage](#usage)
-5. [Data Processing Pipeline](#data-processing-pipeline)
-6. [Examples](#examples)
-7. [License](#license)
 
-## Features <a name="features"></a>
-- Generate optimal Bing search queries using GPT-3.5
-- Scrape web content and process the data
-- Summarize articles using GPT-3.5
-- Create engaging newsletters in the style of a Medium post
+1. [Overview](#overview)
+2. [Backend](#backend)
+   - [Database Schema](#database-schema)
+   - [Core Functionalities](#core-functionalities)
+   - [AI Integration](#ai-integration)
+3. [Frontend](#frontend)
+   - [Dependencies](#dependencies)
+   - [Core Functionalities](#core-functionalities-1)
+   - [UI Components](#ui-components)
+4. [Environment Variables](#environment-variables)
+5. [External Services](#external-services)
 
-## Dependencies <a name="dependencies"></a>
-- axios
-- boilerpipe
-- GPT-4 API
-- Bing Search API
+## Overview
 
-## Installation <a name="installation"></a>
-1. Clone the repository:
-    ```
-    git clone https://github.com/yourusername/personalized-content-generator.git
-    ```
-2. Install the dependencies:
-    ```
-    npm install
-    ```
-3. Set up the environment variables:
+This monorepo project is designed to generate personalized newsletters through AI algorithms. It is composed of frontend and backend subsystems. The backend is architected in a Node.js environment and leverages Prisma for Object-Relational Mapping (ORM). The frontend is constructed using React and integrates Auth0 for secure authentication.
 
-    Create a `.env` file in the root directory and add the following variables:
-    ```
-    GPT_API_KEY=your_gpt_api_key
-    BING_API_KEY=your_bing_api_key
-    ```
-    Replace `your_gpt_api_key` and `your_bing_api_key` with your respective API keys.
+---
 
-## Usage <a name="usage"></a>
-To run the generator, execute the following command:
+## Backend
 
-```
-npm start
-```
+### Database Schema
 
-This will run the displayContent() function in main.ts, which generates a personalized newsletter based on the given search term and reason.
+#### Prisma Schema (`schema.prisma`)
 
-Data Processing Pipeline <a name="data-processing-pipeline"></a>
-The data processing pipeline consists of the following steps:
+- `User`: Models the user entity with attributes such as `id`, `userEmail`, `name`, `newsletters`, and `emailsToSendTo`.
+- `Newsletter`: Encapsulates metadata about individual newsletters.
+- `UsedArticle`: Maintains a record of articles that have been utilized in newsletters.
 
-1. Generate the optimal Bing search query using GPT-3.5 based on the user's search term and reason.
-2. Query the Bing Search API with the generated search query.
-3. Scrape web content from the search results using the boilerpipe library.
-4. Clean and process the scraped text.
-5. Generate summaries of the articles using GPT-3.5.
-6. Create a comprehensive and engaging newsletter using GPT-3.5.
+### Core Functionalities
 
-## Examples <a name="examples"></a>
-To generate a personalized newsletter about upcoming sneaker releases, you can call the generatePersonalizedContent() function with the following parameters:
+#### Prisma Client (`prismaClient.ts`)
 
-```
-generatePersonalizedContent(
-  "upcoming sneaker releases",
-  "be able to buy the shoes at the retail price"
-);
-```
+- `importEmailList`: Bulk imports email addresses for a designated user.
+- `addSingleEmail`: Appends a singular email to a user's email list.
 
-This will generate a newsletter with information about upcoming sneaker releases, tailored to help the user buy the shoes at the retail price.
+#### Data Processing (`dataprocessing.ts`)
 
-## License <a name="license"></a>
-This project is licensed under the MIT License.
+- `isArticleUsed`: Validates whether an article has been previously used.
+- `processArticles`: Filters articles based on a given search query.
+- `sortArticles`: Ranks articles according to their relevance and rationale.
+
+### Server Implementation (`server.ts`)
+
+The server is implemented using Express.js and is configured to run on a port specified in the environment variables or defaults to 3001. It uses Prisma as the ORM and AWS SES for email services.
+
+#### Middleware
+
+- `express.json()`: For parsing JSON request bodies.
+- `cors`: For handling CORS issues.
+
+#### Server Initialization
+
+The server is initialized to listen on the specified port and logs a message to the console confirming the same.
+
+### API Endpoints
+
+The server exposes several RESTful API endpoints for various functionalities:
+
+- `GET /unsubscribe`: Handles unsubscription requests.
+- `POST /api/update-user`: Updates user information.
+- `POST /api/create-newsletter`: Creates a new newsletter.
+- `GET /api/get-newsletters`: Fetches all newsletters for a user.
+- `GET /api/get-emails`: Fetches all emails for a user.
+- `POST /api/delete-selected-emails`: Deletes selected emails.
+- `DELETE /api/delete-newsletter/:id`: Deletes a newsletter by ID.
+- `POST /api/add-emails`: Adds emails to a user's list.
+- `POST /api/send-newsletter`: Sends the newsletter.
+- `POST /api/regenerate-newsletter`: Regenerates the content of a newsletter.
+
+### AI Integration
+
+- `generateOptimalBingSearchQuery`: Constructs an optimized Bing search query.
+- `generateSummaryWithGPT`: Summarizes articles using GPT algorithms.
+- `generateNewsletterWithGPT`: Fabricates the newsletter content via GPT.
+
+---
+
+## Frontend
+
+### Dependencies (`package.json`)
+
+- Libraries: React, Auth0, Emotion (Styling), Material-UI (UI Components)
+
+### Core Functionalities
+
+#### App Component (`app.jsx`)
+
+- Manages authentication and routes users to the pertinent component.
+
+#### API Service (`apiservice.js`)
+
+- Offers utility functions for backend API communication.
+
+#### Authenticated App (`authenticatedapp`)
+
+- Oversees the authenticated segment of the application.
+
+### UI Components
+
+- `ConfirmDeleteDialog`: Confirmation dialog for delete operations.
+- `ConfirmSendDialog`: Confirmation dialog for send operations.
+- `EmailList`: Manages and displays the email list.
+- `LoginButton`: Executes user login.
+- `LogoutButton`: Executes user logout.
+- `NewsletterDetailDialog`: Shows detailed newsletter information.
+- `NewsletterForm`: Provides a form interface for newsletter creation.
+- `NewsletterList`: Manages and displays the list of newsletters.
+
+---
+
+## Environment Variables (`auth0-config.json`)
+
+- Auth0 configurations for authentication are stored here.
+
+## External Services
+
+- **Bing Search API**: Responsible for article retrieval based on search queries.
+- **AWS SES**: Utilized for email dispatch.
+
+## Environment Variables
+
+- `DATABASE_URL`: URL for the PostgreSQL database.
+- `AWS_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`: AWS SES settings.
+- `BING_API_KEY`: API key for Bing Search.
+- `GPT_API_KEY`: API key for GPT.
