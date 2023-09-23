@@ -127,7 +127,7 @@ Logs a confirmation message upon successful initialization.
 
 ## Frontend
 
-### Dependencies (`package.json`)
+### Dependencies
 
 - React, Auth0, Emotion, Material-UI
 
