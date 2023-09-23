@@ -11,17 +11,31 @@ import axios from "axios";
 
 const API_BASE_URL = "http://localhost:3001/api";
 
-const EmailList = ({ user, emailList, refetchEmails }) => {
+const EmailList = ({ admin, emailList, refetchEmails }) => {
   const [selectedEmails, setSelectedEmails] = useState(new Set());
   const [emailInput, setEmailInput] = useState("");
+  const [emailError, setEmailError] = useState(false);
+
+  const validateEmails = (emails) => {
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return emails.every((email) => emailRegex.test(email.trim()));
+  };
 
   const handleAddEmails = async () => {
     const emails = emailInput.includes(",")
       ? emailInput.split(",")
       : [emailInput];
+
+    if (!validateEmails(emails)) {
+      setEmailError(true);
+      return;
+    }
+
+    setEmailError(false);
+
     try {
       await axios.post(`${API_BASE_URL}/add-emails`, {
-        id: user?.sub,
+        adminID: admin?.sub,
         emailList: emails,
       });
       refetchEmails();
@@ -39,8 +53,8 @@ const EmailList = ({ user, emailList, refetchEmails }) => {
   };
 
   const handleDeleteEmails = async () => {
-    if (!user?.sub) {
-      console.error("User ID is undefined");
+    if (!admin?.sub) {
+      console.error("Admin ID is undefined");
       return;
     }
 
@@ -52,7 +66,7 @@ const EmailList = ({ user, emailList, refetchEmails }) => {
 
     try {
       await axios.post(`${API_BASE_URL}/delete-selected-emails`, {
-        id: user.sub,
+        adminID: admin.sub,
         emailsToDelete: emails,
       });
       refetchEmails();
@@ -71,6 +85,8 @@ const EmailList = ({ user, emailList, refetchEmails }) => {
           value={emailInput}
           onChange={(e) => setEmailInput(e.target.value)}
           fullWidth
+          error={emailError}
+          helperText={emailError ? "Invalid email format" : ""}
         />
         <Button
           variant="contained"

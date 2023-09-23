@@ -1,11 +1,11 @@
 /*
   Warnings:
 
-  - Added the required column `userId` to the `Newsletter` table without a default value. This is not possible if the table is not empty.
+  - Added the required column `adminID` to the `Newsletter` table without a default value. This is not possible if the table is not empty.
 
 */
 -- AlterTable
-ALTER TABLE "Newsletter" ADD COLUMN     "userId" INTEGER NOT NULL;
+ALTER TABLE "Newsletter" ADD COLUMN     "adminID" INTEGER NOT NULL;
 
 -- AddForeignKey
-ALTER TABLE "Newsletter" ADD CONSTRAINT "Newsletter_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Newsletter" ADD CONSTRAINT "Newsletter_adminID_fkey" FOREIGN KEY ("adminID") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

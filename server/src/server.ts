@@ -32,7 +32,7 @@ const sesClient = new SESClient(sesConfig);
 
 // API Endpoints
 app.get("/unsubscribe", unsubscribeHandler);
-app.post("/api/update-user", updateUserHandler);
+app.post("/api/update-admin", updateAdminHandler);
 app.post("/api/create-newsletter", createNewsletterHandler);
 app.get("/api/get-newsletters", getNewslettersHandler);
 app.get("/api/get-emails", getEmailsHandler);
@@ -43,9 +43,9 @@ app.post("/api/send-newsletter", sendNewsletterHandler);
 app.post("/api/regenerate-newsletter", regenerateNewsletterHandler);
 
 async function regenerateNewsletterHandler(req: Request, res: Response) {
-  const { newsletterId, userId } = req.body;
-  console.log(newsletterId, userId);
-  if (!newsletterId || !userId) {
+  const { newsletterId, adminID } = req.body;
+  console.log(newsletterId, adminID);
+  if (!newsletterId || !adminID) {
     return res.status(400).json({ error: "Invalid payload" });
   }
 
@@ -61,7 +61,7 @@ async function regenerateNewsletterHandler(req: Request, res: Response) {
 
     const usedArticles = await prisma.usedArticle.findMany({
       where: {
-        userId: userId,
+        adminID: adminID,
         topic: newsletter.topic,
         reason: newsletter.reason,
       },
@@ -73,7 +73,7 @@ async function regenerateNewsletterHandler(req: Request, res: Response) {
     const { content, firstFourArticles } = await generatePersonalizedContent(
       newsletter.topic,
       newsletter.reason,
-      userId,
+      adminID,
       usedArticleSet // Pass this as an additional parameter
     );
 
@@ -96,7 +96,7 @@ async function regenerateNewsletterHandler(req: Request, res: Response) {
         if (
           !(await isArticleUsed(
             article.url,
-            userId,
+            adminID,
             newsletter.topic,
             newsletter.reason
           ))
@@ -105,7 +105,7 @@ async function regenerateNewsletterHandler(req: Request, res: Response) {
             data: {
               url: article.url,
               newsletterId: Number(newsletterId),
-              userId: userId,
+              adminID: adminID,
               topic: newsletter.topic,
               reason: newsletter.reason,
               createdAt: new Date(),
@@ -138,42 +138,47 @@ async function sendNewsletterHandler(req: Request, res: Response) {
     // Fetch the newsletter content and user information using Prisma
     const newsletter = await prisma.newsletter.findUnique({
       where: { id: Number(newsletterId) },
-      include: { user: true },
+      include: { admin: true },
     });
 
-    if (!newsletter || !newsletter.user || !newsletter.user.emailsToSendTo) {
+    if (!newsletter || !newsletter.admin || !newsletter.admin.mailingList) {
       return res.status(404).json({ error: "Newsletter or user not found" });
     }
 
-    const toAddresses = newsletter.user.emailsToSendTo as string[];
+    const toAddresses = newsletter.admin.mailingList as string[];
 
-    // Configure email parameters
-    const params = {
-      Source: "tom.elizaga@gmail.com",
-      Destination: {
-        ToAddresses: toAddresses,
-      },
-      Message: {
-        Subject: { Data: newsletter.title },
-        Body: { Text: { Data: newsletter.content } },
-      },
-    };
+    const newsletterContent = newsletter.content; // Store the original content
 
-    // Send email via AWS SES
-    try {
+    for (const recipientEmail of toAddresses) {
+      // Generate a unique unsubscribe link for each recipient
+      const unsubscribeLink = `http://127.0.0.1/unsubscribe?adminId=${
+        newsletter.admin.id
+      }&email=${encodeURIComponent(recipientEmail)}`;
+
+      // Append the unsubscribe link to the newsletter content
+      const personalizedContent = `${newsletterContent}\n\n[Unsubscribe](${unsubscribeLink})`;
+
+      // Configure email parameters for this recipient
+      const params = {
+        Source: "tom.elizaga@gmail.com",
+        Destination: {
+          ToAddresses: [recipientEmail], // Single recipient
+        },
+        Message: {
+          Subject: { Data: newsletter.title },
+          Body: { Text: { Data: personalizedContent } },
+        },
+      };
+
+      // Send email via AWS SES
       const sendEmailCommand = new SendEmailCommand(params);
       try {
-        const data = await sesClient.send(sendEmailCommand);
-        return res
-          .status(200)
-          .json({ message: "Newsletter sent successfully", data });
+        await sesClient.send(sendEmailCommand);
       } catch (err) {
         console.error(err);
-        return res.status(500).json({ error: "Failed to send email" });
       }
-    } catch (err) {
-      console.error(err);
-      return res.status(500).json({ error: "Failed to send email" });
+
+      return res.status(200).json({ message: "Newsletter sent successfully" });
     }
   } catch (error) {
     console.error("Error in send-newsletter:", error);
@@ -182,27 +187,28 @@ async function sendNewsletterHandler(req: Request, res: Response) {
 }
 
 async function getNewslettersHandler(req: Request, res: Response) {
-  const id = req.query.id as string;
-  if (!id) return res.status(400).json({ error: "Invalid id query parameter" });
+  const adminId = req.query.adminId as string;
+  if (!adminId)
+    return res.status(400).json({ error: "Invalid id query parameter" });
 
   const newsletters = await prisma.newsletter.findMany({
-    where: { user: { id } },
+    where: { adminID: adminId },
   });
   res.json(newsletters);
 }
 
 async function getEmailsHandler(req: Request, res: Response) {
-  const id = req.query.id;
-  if (typeof id !== "string") {
+  const adminId = req.query.adminId;
+  if (typeof adminId !== "string") {
     return res.status(400).json({ error: "Invalid email query parameter" });
   }
-  const user = await prisma.user.findUnique({
-    where: { id: id },
+  const admin = await prisma.admin.findUnique({
+    where: { id: adminId },
   });
-  if (!user) {
-    return res.status(404).json({ error: "User not found" });
+  if (!admin) {
+    return res.status(404).json({ error: "Admin not found" });
   }
-  res.json({ emailsToSendTo: user.emailsToSendTo });
+  res.json({ mailingList: admin.mailingList });
 }
 
 async function deleteNewsletterHandler(req: Request, res: Response) {
@@ -219,9 +225,9 @@ async function deleteNewsletterHandler(req: Request, res: Response) {
 }
 
 async function deleteSelectedEmailsHandler(req: Request, res: Response) {
-  const { id, emailsToDelete } = req.body;
+  const { adminID, emailsToDelete } = req.body;
 
-  if (!id) {
+  if (!adminID) {
     return res.status(400).json({ error: "ID is missing from payload" });
   }
   if (!Array.isArray(emailsToDelete)) {
@@ -229,29 +235,29 @@ async function deleteSelectedEmailsHandler(req: Request, res: Response) {
   }
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { id: id },
+    const admin = await prisma.admin.findUnique({
+      where: { id: adminID },
     });
 
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
+    if (!admin) {
+      return res.status(404).json({ error: "Admin not found" });
     }
 
-    if (!user || !Array.isArray(user.emailsToSendTo)) {
+    if (!admin || !Array.isArray(admin.mailingList)) {
       return res
         .status(404)
-        .json({ error: "User not found or no emails to send to" });
+        .json({ error: "Admin not found or no emails to send to" });
     }
 
     // Filter out the emails to delete
-    const updatedEmails = user.emailsToSendTo.filter(
+    const updatedEmails = admin.mailingList.filter(
       (e) => !emailsToDelete.includes(e)
     );
 
-    // Update the user's emails
-    await prisma.user.update({
-      where: { id: id },
-      data: { emailsToSendTo: updatedEmails },
+    // Update the admin's emails
+    await prisma.admin.update({
+      where: { id: adminID },
+      data: { mailingList: updatedEmails },
     });
 
     res.status(200).json({ message: "Successfully deleted selected emails" });
@@ -266,39 +272,39 @@ async function unsubscribeHandler(
   res: Response
 ): Promise<Response> {
   const email = req.query.email as string;
-  const userId = req.query.userId as string;
+  const adminId = req.query.adminId as string;
 
-  if (!email || !userId) {
+  if (!email || !adminId) {
     return res
       .status(400)
-      .json({ error: "Bad Request: Missing email or userId." });
+      .json({ error: "Bad Request: Missing email or adminID." });
   }
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
+    const admin = await prisma.admin.findUnique({
+      where: { id: adminId },
     });
 
-    if (user && user.emailsToSendTo) {
-      const emailsArray = user.emailsToSendTo as string[]; // Type casting
-      const updatedEmailsToSendTo = emailsArray.filter((e) => e !== email);
-      await prisma.user.update({
-        where: { id: userId },
-        data: { emailsToSendTo: updatedEmailsToSendTo },
+    if (admin && admin.mailingList) {
+      const emailsArray = admin.mailingList as string[]; // Type casting
+      const updatedmailingList = emailsArray.filter((e) => e !== email);
+      await prisma.admin.update({
+        where: { id: adminId },
+        data: { mailingList: updatedmailingList },
       });
       return res.status(200).json({ message: "Successfully unsubscribed." });
     }
 
     return res
       .status(404)
-      .json({ error: "User not found or no emails to send to." });
+      .json({ error: "Admin not found or no emails to send to." });
   } catch (error) {
     console.error("Error in unsubscribe:", error);
     return res.status(500).json({ error: "Internal Server Error" });
   }
 }
 
-async function updateUserHandler(req: Request, res: Response): Promise<void> {
+async function updateAdminHandler(req: Request, res: Response): Promise<void> {
   const { id, email, name } = req.body;
 
   if (id == null || email == null) {
@@ -306,26 +312,27 @@ async function updateUserHandler(req: Request, res: Response): Promise<void> {
     return;
   }
 
-  await prisma.user.upsert({
-    where: { id: id },
-    update: { name, userEmail: email },
-    create: { id: id, name, userEmail: email, emailsToSendTo: [email] },
+  await prisma.admin.upsert({
+    where: { id },
+    update: { name, email },
+    create: { id, name, email, mailingList: [email] },
   });
 
-  res.status(200).json({ message: "User updated successfully" });
+  res.status(200).json({ message: "Admin updated successfully" });
 }
 
 async function createNewsletterHandler(req: Request, res: Response) {
   try {
-    const { id, topic, reason } = req.body;
-    const user = await prisma.user.findUnique({ where: { id: id } });
-    if (user) {
-      // Fetch the set of used articles for this user, topic, and reason
+    const { adminID, topic, reason } = req.body;
+    console.log(adminID);
+    const admin = await prisma.admin.findUnique({ where: { id: adminID } });
+    if (admin) {
+      // Fetch the set of used articles for this admin, topic, and reason
       const usedArticles = await prisma.usedArticle.findMany({
         where: {
-          userId: user.id,
-          topic: topic,
-          reason: reason,
+          adminID,
+          topic,
+          reason,
         },
       });
       const usedArticleSet = new Set(usedArticles.map((ua) => ua.url));
@@ -333,12 +340,12 @@ async function createNewsletterHandler(req: Request, res: Response) {
         await generatePersonalizedContent(
           topic,
           reason,
-          user.id,
+          adminID,
           usedArticleSet
         );
       const newsletter = await prisma.newsletter.create({
         data: {
-          userId: user.id,
+          adminID,
           topic: topic,
           reason: reason,
           title: `Newsletter: ${optimalSearchQuery} - ${new Date().toISOString()}`,
@@ -353,12 +360,12 @@ async function createNewsletterHandler(req: Request, res: Response) {
       // Update the UsedArticle table with certain conditions. i don't want this updated when an article is seen before by the same admin for the same topic and reason.
       await Promise.all(
         firstFourArticles.map(async (article) => {
-          if (!(await isArticleUsed(article.url, user.id, topic, reason))) {
+          if (!(await isArticleUsed(article.url, adminID, topic, reason))) {
             return prisma.usedArticle.create({
               data: {
                 url: article.url,
                 newsletterId: newsletter.id,
-                userId: user.id,
+                adminID,
                 topic: topic,
                 reason: reason,
                 createdAt: new Date(),
@@ -374,7 +381,7 @@ async function createNewsletterHandler(req: Request, res: Response) {
       );
       return res.status(200).json({ message: "Newsletter created", content });
     }
-    return res.status(404).json({ error: "User not found" });
+    return res.status(404).json({ error: "Admin not found" });
   } catch (error) {
     console.error("Error in create-newsletter:", error);
     return res.status(500).json({ error: "Internal Server Error" });
@@ -384,30 +391,30 @@ async function createNewsletterHandler(req: Request, res: Response) {
 async function addEmailsHandler(req: Request, res: Response) {
   console.log("Received payload:", req.body);
 
-  const { id, emailList } = req.body;
+  const { adminID, emailList } = req.body;
 
-  if (!id || !Array.isArray(emailList)) {
+  if (!adminID || !Array.isArray(emailList)) {
     return res.status(400).json({ error: "Invalid payload" });
   }
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { id: id },
+    const admin = await prisma.admin.findUnique({
+      where: { id: adminID },
     });
 
-    if (!user || !Array.isArray(user.emailsToSendTo)) {
+    if (!admin || !Array.isArray(admin.mailingList)) {
       return res
         .status(404)
-        .json({ error: "User not found or no emails to send to" });
+        .json({ error: "Admin not found or no emails to send to" });
     }
 
     // Combine existing and new emails
-    const updatedEmails = [...new Set([...user.emailsToSendTo, ...emailList])];
+    const updatedEmails = [...new Set([...admin.mailingList, ...emailList])];
 
-    // Update the user's emails
-    await prisma.user.update({
-      where: { id: id },
-      data: { emailsToSendTo: updatedEmails },
+    // Update the admin's emails
+    await prisma.admin.update({
+      where: { id: adminID },
+      data: { mailingList: updatedEmails },
     });
 
     res

@@ -8,26 +8,26 @@ import axios from "axios";
 const queryClient = new QueryClient();
 
 const App = () => {
-  const { isAuthenticated, user, isLoading } = useAuth0();
+  const { isAuthenticated, user: admin, isLoading } = useAuth0();
 
-  console.log(user);
+  console.log(admin);
 
   useEffect(() => {
-    if (isAuthenticated && user) {
-      axios.post("http://localhost:3001/api/update-user", {
-        id: user.sub,
-        name: user.name,
-        email: user.email,
+    if (isAuthenticated && admin) {
+      axios.post("http://localhost:3001/api/update-admin", {
+        id: admin.sub,
+        name: admin.name,
+        email: admin.email,
       });
     }
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, admin]);
 
   return (
     <QueryClientProvider client={queryClient}>
       {isLoading ? (
         "Loading..."
       ) : isAuthenticated ? (
-        <AuthenticatedApp user={user} />
+        <AuthenticatedApp admin={admin} />
       ) : (
         <LoginButton />
       )}

@@ -11,7 +11,7 @@ import ConfirmSendDialog from "./ConfirmSendDialog";
 import NewsletterDetailDialog from "./NewsletterDetailDialog";
 import ConfirmDeleteDialog from "./ConfirmDeleteDialog";
 
-const NewsletterList = ({ newsletters, user }) => {
+const NewsletterList = ({ newsletters, admin }) => {
   const queryClient = useQueryClient();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedNewsletterId, setSelectedNewsletterId] = useState(null);
@@ -28,7 +28,7 @@ const NewsletterList = ({ newsletters, user }) => {
   const handleDeleteNewsletter = async (newsletterId) => {
     try {
       await deleteNewsletter(newsletterId);
-      queryClient.invalidateQueries(["newsletters", user.sub]);
+      queryClient.invalidateQueries(["newsletters", admin.sub]);
     } catch (error) {
       console.error(
         `Failed to delete newsletter with ID ${newsletterId}`,
@@ -37,12 +37,12 @@ const NewsletterList = ({ newsletters, user }) => {
     }
   };
 
-  const handleRegenerateNewsletter = async (newsletterId, userId) => {
-    console.log(newsletterId, userId);
+  const handleRegenerateNewsletter = async (newsletterId, adminID) => {
+    console.log(newsletterId, adminID);
     try {
       const regeneratedNewsletter = await regenerateNewsletter(
         newsletterId,
-        userId
+        adminID
       );
       console.log(
         `Newsletter with ID ${newsletterId} regenerated`,
@@ -87,7 +87,7 @@ const NewsletterList = ({ newsletters, user }) => {
                 variant="contained"
                 color="primary"
                 onClick={() =>
-                  handleRegenerateNewsletter(newsletter.id, user.sub)
+                  handleRegenerateNewsletter(newsletter.id, admin.sub)
                 }
               >
                 Regenerate

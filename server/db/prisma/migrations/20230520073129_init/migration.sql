@@ -10,7 +10,7 @@ CREATE TABLE "User" (
 -- CreateTable
 CREATE TABLE "Preference" (
     "id" SERIAL NOT NULL,
-    "userId" INTEGER NOT NULL,
+    "adminID" INTEGER NOT NULL,
     "searchTerm" TEXT NOT NULL,
     "reason" TEXT NOT NULL,
 
@@ -21,4 +21,4 @@ CREATE TABLE "Preference" (
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- AddForeignKey
-ALTER TABLE "Preference" ADD CONSTRAINT "Preference_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Preference" ADD CONSTRAINT "Preference_adminID_fkey" FOREIGN KEY ("adminID") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

@@ -7,12 +7,12 @@ generator client {
   provider = "prisma-client-js"
 }
 
-model User {
-  id              String        @id @default(uuid())
-  userEmail       String       @unique
+model Admin {
+  id              String       @id @default(uuid())
+  email           String       @unique
   name            String?
   newsletters     Newsletter[]
-  emailsToSendTo  Json
+  mailingList     Json
 }
 
 
@@ -22,12 +22,12 @@ model Newsletter {
   title           String
   content         String       
   sentDate        DateTime     @default(now())
-  userId          String
+  adminID         String
   topic           String
   reason          String
   searchQuery     String?
   contentHistory  ContentHistory[]  
-  user            User         @relation(fields: [userId], references: [id])
+  admin           Admin         @relation(fields: [adminID], references: [id])
   usedArticles    UsedArticle[] @relation("UsedArticleToNewsletter")
 }
 
@@ -36,10 +36,10 @@ model UsedArticle {
   url             String
   newsletterId    Int
   createdAt       DateTime  @default(now())
-  userId          String
+  adminID          String
   topic           String
   reason          String
-  @@unique([url, userId, topic, reason])
+  @@unique([url, adminID, topic, reason])
   newsletter      Newsletter @relation("UsedArticleToNewsletter", fields: [newsletterId], references: [id], onDelete: Cascade)
 }
 

@@ -8,7 +8,7 @@ import EmailList from "./EmailList.jsx";
 import NewsletterForm from "./NewsletterForm";
 
 // The AuthenticatedApp component handles the authenticated part of the application
-const AuthenticatedApp = ({ user }) => {
+const AuthenticatedApp = ({ admin }) => {
   // Initialize React Query's client for cache manipulation
   const queryClient = useQueryClient();
 
@@ -16,20 +16,20 @@ const AuthenticatedApp = ({ user }) => {
   const [topic, setTopic] = useState("");
   const [reason, setReason] = useState("");
 
-  // Fetch the email list associated with the user and enable refetching
+  // Fetch the email list associated with the admin and enable refetching
   const { data: emailList, refetch: refetchEmails } = useQuery(
-    ["emails", user.sub],
-    () => fetchEmails(user.sub)
+    ["emails", admin.sub],
+    () => fetchEmails(admin.sub)
   );
 
-  // Fetch the newsletters associated with the user
-  const { data: newsletters } = useQuery(["newsletters", user.sub], () =>
-    fetchNewsletters(user.sub)
+  // Fetch the newsletters associated with the admin
+  const { data: newsletters } = useQuery(["newsletters", admin.sub], () =>
+    fetchNewsletters(admin.sub)
   );
 
   // Create a newsletter using a mutation and invalidate the cache to refetch newsletters
   const createNewsletterMutation = useMutation(createNewsletter, {
-    onSuccess: () => queryClient.invalidateQueries(["newsletters", user.sub]),
+    onSuccess: () => queryClient.invalidateQueries(["newsletters", admin.sub]),
   });
 
   // Render the application UI
@@ -37,7 +37,7 @@ const AuthenticatedApp = ({ user }) => {
     <>
       <LogoutButton />
       <NewsletterForm
-        user={user}
+        admin={admin}
         topic={topic}
         setTopic={setTopic}
         reason={reason}
@@ -45,10 +45,10 @@ const AuthenticatedApp = ({ user }) => {
         createNewsletterMutation={createNewsletterMutation}
       />
       {/* List of newsletters */}
-      <NewsletterList newsletters={newsletters} user={user} />
+      <NewsletterList newsletters={newsletters} admin={admin} />
       {/* List of emails with the ability to refetch */}
       <EmailList
-        user={user}
+        admin={admin}
         emailList={emailList}
         refetchEmails={refetchEmails}
       />

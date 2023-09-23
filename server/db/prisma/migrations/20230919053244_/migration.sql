@@ -5,10 +5,10 @@
 
 */
 -- DropForeignKey
-ALTER TABLE "Newsletter" DROP CONSTRAINT "Newsletter_userId_fkey";
+ALTER TABLE "Newsletter" DROP CONSTRAINT "Newsletter_adminID_fkey";
 
 -- AlterTable
-ALTER TABLE "Newsletter" ALTER COLUMN "userId" SET DATA TYPE TEXT;
+ALTER TABLE "Newsletter" ALTER COLUMN "adminID" SET DATA TYPE TEXT;
 
 -- AlterTable
 ALTER TABLE "User" DROP CONSTRAINT "User_pkey",
@@ -18,4 +18,4 @@ ADD CONSTRAINT "User_pkey" PRIMARY KEY ("id");
 DROP SEQUENCE "User_id_seq";
 
 -- AddForeignKey
-ALTER TABLE "Newsletter" ADD CONSTRAINT "Newsletter_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Newsletter" ADD CONSTRAINT "Newsletter_adminID_fkey" FOREIGN KEY ("adminID") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

@@ -31,31 +31,31 @@ This monorepo project aims to generate personalized newsletters through AI algor
 
 #### Database Schema Relationships
 
-This section details the relationships and constraints among the database models—User, Newsletter, UsedArticle, and ContentHistory.
+This section details the relationships and constraints among the database models—Admin, Newsletter, UsedArticle, and ContentHistory.
 
 #### Models and Fields
 
-1. **User**
+1. **Admin**
 
    - `id`: UUID-based unique identifier.
-   - `userEmail`: Unique email.
+   - `email`: Unique email.
    - `name`: Optional name.
    - `newsletters`: Array of authored newsletters.
-   - `emailsToSendTo`: JSON field for additional email addresses.
+   - `mailingList`: JSON field for additional email addresses.
 
 2. **Newsletter**
 
    - `id`: Auto-incremented unique identifier.
    - `regenerateCount`: Regeneration attempts counter.
-   - `title`, `content`, `sentDate`, `userId`, `topic`, `reason`, `searchQuery`: Various attributes.
+   - `title`, `content`, `sentDate`, `adminID`, `topic`, `reason`, `searchQuery`: Various attributes.
    - `contentHistory`: Array of historical contents.
    - `usedArticles`: Array of used articles.
-   - `user`: Foreign key to `User`.
+   - `admin`: Foreign key to `Admin`.
 
 3. **UsedArticle**
 
    - `id`: Auto-incremented unique identifier.
-   - `url`, `newsletterId`, `createdAt`, `userId`, `topic`, `reason`: Various attributes.
+   - `url`, `newsletterId`, `createdAt`, `adminID`, `topic`, `reason`: Various attributes.
    - `newsletter`: Foreign key to `Newsletter`.
 
 4. **ContentHistory**
@@ -65,7 +65,7 @@ This section details the relationships and constraints among the database models
 
 #### Relationships
 
-1. **User -> Newsletter**: One-to-Many
+1. **Admin -> Newsletter**: One-to-Many
 2. **Newsletter -> ContentHistory**: One-to-Many
 3. **Newsletter -> UsedArticle**: One-to-Many
 4. **Composite Uniqueness in UsedArticle**: Defined by `@@unique` directive.
@@ -107,7 +107,7 @@ Logs a confirmation message upon successful initialization.
 ### API Endpoints
 
 - `GET /unsubscribe`
-- `POST /api/update-user`
+- `POST /api/update-admin`
 - `POST /api/create-newsletter`
 - `GET /api/get-newsletters`
 - `GET /api/get-emails`

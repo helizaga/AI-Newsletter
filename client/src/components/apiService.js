@@ -2,13 +2,17 @@ import axios from "axios";
 
 const API_BASE_URL = "http://localhost:3001/api";
 
-export const fetchEmails = async (id) => {
-  const response = await axios.get(`${API_BASE_URL}/get-emails?id=${id}`);
-  return response.data.emailsToSendTo;
+export const fetchEmails = async (adminId) => {
+  const response = await axios.get(
+    `${API_BASE_URL}/get-emails?adminId=${adminId}`
+  );
+  return response.data.mailingList;
 };
 
-export const fetchNewsletters = async (id) => {
-  const response = await axios.get(`${API_BASE_URL}/get-newsletters?id=${id}`);
+export const fetchNewsletters = async (adminId) => {
+  const response = await axios.get(
+    `${API_BASE_URL}/get-newsletters?adminId=${adminId}`
+  );
   return response.data;
 };
 
@@ -20,32 +24,32 @@ export const createNewsletter = async (payload) => {
   return response.data;
 };
 
-export const addEmails = async (id, emailListToAdd) => {
+export const addEmails = async (adminID, emailListToAdd) => {
   await axios.post(`${API_BASE_URL}/add-emails`, {
-    id,
+    adminID,
     emailList: emailListToAdd,
   });
 };
 
-export const deleteSelectedEmails = async (id, emailsToDelete) => {
+export const deleteSelectedEmails = async (adminID, emailsToDelete) => {
   await axios.post(`${API_BASE_URL}/delete-selected-emails`, {
-    id,
+    adminID,
     emailsToDelete,
   });
 };
 
-export const deleteNewsletter = async (id) => {
-  await axios.delete(`${API_BASE_URL}/delete-newsletter/${id}`);
+export const deleteNewsletter = async (newsletterID) => {
+  await axios.delete(`${API_BASE_URL}/delete-newsletter/${newsletterID}`);
 };
 
 export const sendNewsletter = async (newsletterId) => {
   await axios.post(`${API_BASE_URL}/send-newsletter`, { newsletterId });
 };
 
-export const regenerateNewsletter = async (newsletterId, userId) => {
+export const regenerateNewsletter = async (newsletterId, adminID) => {
   const response = await axios.post(`${API_BASE_URL}/regenerate-newsletter`, {
     newsletterId,
-    userId,
+    adminID,
   });
   return response.data;
 };

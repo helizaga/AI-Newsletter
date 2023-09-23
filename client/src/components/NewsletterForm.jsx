@@ -3,7 +3,7 @@ import React from "react";
 import { TextField, Button } from "@mui/material";
 
 const NewsletterForm = ({
-  user,
+  admin,
   topic,
   setTopic,
   reason,
@@ -25,7 +25,7 @@ const NewsletterForm = ({
       variant="contained"
       color="primary"
       onClick={() =>
-        createNewsletterMutation.mutate({ id: user.sub, topic, reason })
+        createNewsletterMutation.mutate({ adminID: admin.sub, topic, reason })
       }
     >
       Create Newsletter

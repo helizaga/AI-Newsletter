@@ -1,12 +1,14 @@
 import { queryBingSearchAPI } from "../../services/bing/bing";
 import { scrapeWebContent, cleanText } from "../utils/utils";
-import { prisma } from "../db/prisma/prismaClient";
+import { PrismaClient } from "@prisma/client";
 import { getRelevanceScore } from "../../services/gpt/gpt";
 import {
   generateSummaryWithGPT,
   generateNewsletterWithGPT,
   generateOptimalBingSearchQuery,
 } from "../../services/gpt/gpt";
+
+const prisma = new PrismaClient();
 
 interface ArticleData {
   url: string;
@@ -16,14 +18,14 @@ interface ArticleData {
 // dataProcessing.ts
 async function isArticleUsed(
   url: string,
-  userId: string,
+  adminID: string,
   topic: string,
   reason: string
 ): Promise<boolean> {
   const usedArticle = await prisma.usedArticle.findFirst({
     where: {
       url: url,
-      userId: userId, // new field
+      adminID: adminID, // new field
       topic: topic, // new field
       reason: reason, // new field
     },
@@ -33,7 +35,7 @@ async function isArticleUsed(
 
 const processArticles = async (
   optimalSearchQuery: string,
-  userId: string,
+  adminID: string,
   topic: string,
   reason: string
 ): Promise<ArticleData[]> => {
@@ -41,7 +43,7 @@ const processArticles = async (
   const urls = searchResults.map((result) => result.url);
 
   const isUsedArray = await Promise.all(
-    urls.map((url) => isArticleUsed(url, userId, topic, reason))
+    urls.map((url) => isArticleUsed(url, adminID, topic, reason))
   );
 
   const newUrls = urls.filter((_, index) => !isUsedArray[index]);
@@ -74,9 +76,9 @@ async function processAndSortArticles(
   topic: string,
   reason: string,
   optimalSearchQuery: string,
-  userId: string
+  adminID: string
 ): Promise<ArticleData[]> {
-  // const processedArticles = await processArticles(optimalSearchQuery, userId);
+  // const processedArticles = await processArticles(optimalSearchQuery, adminID);
   // return sortArticles(processedArticles, topic, reason);
   console.log("Dummy Processing and Sorting Articles");
   return [
@@ -106,7 +108,7 @@ async function processAndSortArticles(
 const generatePersonalizedContent = async (
   topic: string,
   reason: string,
-  userId: string,
+  adminId: string,
   usedArticleSet: Set<string> // New parameter
 ): Promise<{
   content: string;
@@ -121,7 +123,7 @@ const generatePersonalizedContent = async (
   );
   const sortedArticles = await processAndSortArticles(
     optimalSearchQuery,
-    userId,
+    adminId,
     topic,
     reason
   );
@@ -148,14 +150,13 @@ const generatePersonalizedContent = async (
   const summarizedText = await generateSummaryWithGPT(
     firstFourArticles.map(({ text }) => text)
   );
-  const unsubscribeLink = `http://yourdomain.com/unsubscribe?userId=${userId}&email=recipient@email.com`;
 
-  const content = `${await generateNewsletterWithGPT(
+  const content = await generateNewsletterWithGPT(
     topic,
     reason,
     summarizedText,
     firstFourArticles.map(({ url }) => url)
-  )}\n\n[Unsubscribe](${unsubscribeLink})`;
+  );
 
   return { content, optimalSearchQuery, firstFourArticles };
 };
