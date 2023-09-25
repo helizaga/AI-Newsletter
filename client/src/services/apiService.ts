@@ -20,28 +20,28 @@ export const handleEmailOperation = async (
 
 export const fetchEmails = async (adminId: string) => {
   const response = await axios.get(
-    `${API_BASE_URL}/get-emails?adminId=${adminId}`
+    `${API_BASE_URL}/admin/emails?adminId=${adminId}`
   );
   return response.data.mailingList;
 };
 
 export const fetchNewsletters = async (adminId: string) => {
   const response = await axios.get(
-    `${API_BASE_URL}/get-newsletters?adminId=${adminId}`
+    `${API_BASE_URL}/newsletters?adminId=${adminId}`
   );
   return response.data;
 };
 
 export const createNewsletter = async (payload: PayloadType) => {
   const response = await axios.post(
-    `${API_BASE_URL}/create-newsletter`,
+    `${API_BASE_URL}/newsletters/create`,
     payload
   );
   return response.data;
 };
 
 export const addEmails = async (adminID: string, emailListToAdd: string[]) => {
-  await axios.post(`${API_BASE_URL}/add-emails`, {
+  await axios.post(`${API_BASE_URL}/admin/emails/add`, {
     adminID,
     emailList: emailListToAdd,
   });
@@ -51,25 +51,27 @@ export const deleteSelectedEmails = async (
   adminID: string,
   emailsToDelete: string[]
 ) => {
-  await axios.post(`${API_BASE_URL}/delete-selected-emails`, {
-    adminID,
-    emailsToDelete,
+  await axios.delete(`${API_BASE_URL}/admin/emails/`, {
+    data: {
+      adminID,
+      emailsToDelete,
+    },
   });
 };
 
 export const deleteNewsletter = async (newsletterId: string) => {
-  await axios.delete(`${API_BASE_URL}/delete-newsletter/${newsletterId}`);
+  await axios.delete(`${API_BASE_URL}/newsletters/${newsletterId}`);
 };
 
 export const sendNewsletter = async (newsletterId: string) => {
-  await axios.post(`${API_BASE_URL}/send-newsletter`, { newsletterId });
+  await axios.post(`${API_BASE_URL}/newsletters/send`, { newsletterId });
 };
 
 export const regenerateNewsletter = async (
   newsletterId: string,
   adminID: string
 ) => {
-  const response = await axios.post(`${API_BASE_URL}/regenerate-newsletter`, {
+  const response = await axios.post(`${API_BASE_URL}/newsletters/regenerate`, {
     newsletterId,
     adminID,
   });

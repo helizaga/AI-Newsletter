@@ -11,11 +11,9 @@ const queryClient = new QueryClient();
 const App = () => {
   const { isAuthenticated, user: admin, isLoading } = useAuth0();
 
-  console.log(admin);
-
   useEffect(() => {
     if (isAuthenticated && admin) {
-      axios.post("http://localhost:3001/api/update-admin", {
+      axios.post("http://localhost:3001/api/admin/update", {
         id: admin.sub,
         name: admin.name,
         email: admin.email,

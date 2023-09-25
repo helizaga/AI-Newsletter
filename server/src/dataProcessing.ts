@@ -1,6 +1,5 @@
 import { queryBingSearchAPI } from "../../services/bing/bing";
 import { scrapeWebContent, cleanText } from "../utils/utils";
-import { PrismaClient } from "@prisma/client";
 import { getRelevanceScore } from "../../services/gpt/gpt";
 import {
   generateSummaryWithGPT,
@@ -8,7 +7,7 @@ import {
   generateOptimalBingSearchQuery,
 } from "../../services/gpt/gpt";
 
-const prisma = new PrismaClient();
+import { prisma } from "../db/prisma/prismaClient";
 
 interface ArticleData {
   url: string;
@@ -126,8 +125,6 @@ const generatePersonalizedContent = async (
   optimalSearchQuery: string;
   firstFourArticles: ArticleData[];
 }> => {
-  console.log("Used articles:", usedArticleSet);
-
   const optimalSearchQuery = await generateOptimalBingSearchQuery(
     topic,
     reason
@@ -143,10 +140,8 @@ const generatePersonalizedContent = async (
   const newArticles = sortedArticles.filter(
     (article) => !usedArticleSet.has(article.url)
   );
-
   console.log("Sorted Articles:", sortedArticles);
   console.log("New Articles:", newArticles);
-
   const firstFourArticles = newArticles.slice(0, 4);
   console.log(firstFourArticles);
 
