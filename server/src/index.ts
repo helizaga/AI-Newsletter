@@ -23,7 +23,6 @@ app.listen(PORT, () => {
 // API Endpoints
 app.use("/api/admin", adminRoutes);
 app.use("/api/newsletters", newsletterRoutes);
-
 app.get("/unsubscribe", unsubscribeHandler);
 
 // Handlers

@@ -111,7 +111,7 @@
     "*.ts",
     "server/utils/utils.ts",
     "server/src/dataProcessing.ts",
-    "server/src/server.ts",
+    "server/src/index.ts",
     "server/db/prisma/prismaClient.ts",
     "services/bing/bing.ts",
     "services/gpt/gpt.ts"

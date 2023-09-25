@@ -5,7 +5,7 @@
   "main": "dist/server.js",
   "scripts": {
     "start": "tsc && concurrently \"cd client && npm start\" \"npm run start:server\"",
-    "start:server": "node dist/server/src/server.js",
+    "start:server": "node dist/server/src/index.js",
     "build": "tsc"
   },
   "dependencies": {
