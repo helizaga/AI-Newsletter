@@ -7,7 +7,7 @@ import {
   Checkbox,
   Typography,
 } from "@mui/material";
-import { useNewsletterQuery } from "../hooks/useNewsletterQuery";
+import { useEmailQuery } from "../hooks/useEmailQuery";
 import { useAdmin } from "../contexts/AdminContext";
 import { addEmails, deleteSelectedEmails } from "../services/apiService";
 
@@ -16,7 +16,7 @@ const isValidEmail = (email: string) =>
 
 const EmailList = () => {
   const { sub: adminID } = useAdmin() || {};
-  const { emailList, refetchEmails } = useNewsletterQuery();
+  const { emailList, refetchEmails } = useEmailQuery();
   const [selectedEmails, setSelectedEmails] = useState<Set<string>>(new Set());
   const [emailInput, setEmailInput] = useState("");
   const [emailError, setEmailError] = useState(false);
