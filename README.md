@@ -7,7 +7,11 @@
    - [Database Schema](#database-schema)
      - [Database Schema Relationships](#database-schema-relationships)
    - [Core Functionalities](#core-functionalities)
-   - [Server Implementation](#server-implementation)
+   - [Server Architecture](#server-architecture)
+     - [Entry Point](#entry-point)
+     - [Controllers](#controllers)
+     - [Routes](#routes)
+     - [Middleware](#middleware)
    - [API Endpoints](#api-endpoints)
    - [AI Integration](#ai-integration)
 3. [Frontend](#frontend)
@@ -101,18 +105,36 @@ This section details the relationships and constraints among the database models
 - `processArticles`: Article filtering.
 - `sortArticles`: Article ranking.
 
-### Server Implementation (`server.ts`)
+### Server Architecture
 
-Built with Express.js, configured to run on a specified port or default to 3001. Utilizes Prisma as ORM and AWS SES for email services.
+The server-side logic is modularized into an MVC-like architecture comprising routes, controllers, and utility functions. The entry point of the backend is `index.ts`.
+
+#### Entry Point (`index.ts`)
+
+Acts as the backend entry point, orchestrating the routes, controllers, and middleware configurations. Initializes the Express.js server, and sets it to listen on a specified port or default to 3001.
+
+#### Controllers
+
+Located in the `src/controllers` directory. Responsible for handling business logic, they interact with the database and return responses.
+
+- `adminController.ts`: Handles admin-related functionalities.
+- `newsletterController.ts`: Manages newsletter generation and sending.
+
+#### Routes
+
+Located in the `src/routes` directory. Define the API endpoints and associate them with their corresponding controllers.
+
+- `adminRoutes.ts`: Routes related to admin functionalities.
+- `newsletterRoutes.ts`: Routes for newsletter operations.
 
 #### Middleware
 
-- `express.json()`: JSON parsing.
-- `cors`: CORS handling.
+Middleware configurations are located in the `server/config/middleware.ts` file.
 
-#### Server Initialization
+- `express.json()`: For JSON parsing.
+- `cors`: For CORS handling.
 
-Logs a confirmation message upon successful initialization.
+Middleware is initialized and configured in the `index.ts` entry point.
 
 ### API Endpoints
 
