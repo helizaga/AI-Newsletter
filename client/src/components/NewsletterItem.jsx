@@ -5,6 +5,7 @@ import { ListItem, Button, Typography } from "@mui/material";
 import ConfirmSendDialog from "./ConfirmSendDialog";
 import NewsletterDetailDialog from "./NewsletterDetailDialog";
 import ConfirmDeleteDialog from "./ConfirmDeleteDialog";
+import ConfirmRegenerateDialog from "./ConfirmRegenerateDialog";
 import {
   deleteNewsletter,
   sendNewsletter,
@@ -18,6 +19,9 @@ export const NewsletterItem = ({ newsletter }) => {
   const admin = useAdmin();
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [regenerateDialogOpen, setRegenerateDialogOpen] = useState(false);
+
+  const [sendDialogOpen, setSendDialogOpen] = useState(false);
 
   const handleSendNewsletterClick = async () => {
     try {
@@ -71,21 +75,35 @@ export const NewsletterItem = ({ newsletter }) => {
           setDeleteDialogOpen(false);
         }}
       />
+      <ConfirmSendDialog
+        isOpen={sendDialogOpen}
+        onClose={() => setSendDialogOpen(false)}
+        onConfirm={handleSendNewsletterClick}
+      />
+      <ConfirmRegenerateDialog
+        isOpen={regenerateDialogOpen}
+        onClose={() => setRegenerateDialogOpen(false)}
+        onConfirm={handleRegenerateNewsletter}
+      />
       <ListItem>
-        <div style={{ cursor: "pointer" }}>
-          <Typography variant="h6" style={{ marginRight: "4px" }}>
-            {newsletter.topic}
-          </Typography>
-          <Typography variant="h6" style={{ marginRight: "12px" }}>
-            {newsletter.reason}
-          </Typography>
-          <NewsletterDetailDialog newsletter={newsletter} />
-        </div>
-        <ConfirmSendDialog onConfirm={handleSendNewsletterClick} />
+        <Typography variant="h6" style={{ marginRight: "4px" }}>
+          {newsletter.topic}
+        </Typography>
+        <Typography variant="h6" style={{ marginRight: "12px" }}>
+          {newsletter.reason}
+        </Typography>
+        <NewsletterDetailDialog newsletter={newsletter} />
         <Button
           variant="contained"
           color="primary"
-          onClick={handleRegenerateNewsletter}
+          onClick={() => setSendDialogOpen(true)}
+        >
+          Send Newsletter
+        </Button>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => setRegenerateDialogOpen(true)}
         >
           Regenerate
         </Button>

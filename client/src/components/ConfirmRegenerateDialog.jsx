@@ -5,17 +5,17 @@ import {
   DialogContent,
   DialogActions,
   Button,
-  Typography,
+  DialogContentText,
 } from "@mui/material";
 
-const ConfirmSendDialog = ({ isOpen, onClose, onConfirm }) => {
+const ConfirmRegenerateDialog = ({ isOpen, onClose, onConfirm }) => {
   return (
     <Dialog open={isOpen} onClose={onClose}>
-      <DialogTitle>Confirm Send</DialogTitle>
+      <DialogTitle>Confirm Regeneration</DialogTitle>
       <DialogContent>
-        <Typography variant="body1">
-          Are you sure you want to send this newsletter?
-        </Typography>
+        <DialogContentText>
+          Are you sure you want to regenerate this newsletter?
+        </DialogContentText>
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} color="secondary">
@@ -35,4 +35,4 @@ const ConfirmSendDialog = ({ isOpen, onClose, onConfirm }) => {
   );
 };
 
-export default ConfirmSendDialog;
+export default ConfirmRegenerateDialog;
