@@ -41,7 +41,7 @@ This section details the relationships and constraints among the database models
    - `email`: Unique email.
    - `name`: Optional name.
    - `newsletters`: Array of authored newsletters.
-   - `mailingList`: JSON field for additional email addresses.
+   - `mailingList`: Array of strings (email addresses) to send newsletters.
 
 2. **Newsletter**
 
@@ -56,19 +56,29 @@ This section details the relationships and constraints among the database models
 
    - `id`: Auto-incremented unique identifier.
    - `url`, `newsletterId`, `createdAt`, `adminID`, `topic`, `reason`: Various attributes.
+   - `summary`: Relation to `ArticleSummary`.
+   - `summaryID`: Foreign key to `ArticleSummary`.
    - `newsletter`: Foreign key to `Newsletter`.
 
 4. **ContentHistory**
+
    - `id`: Auto-incremented unique identifier.
    - `newsletterId`, `content`, `createdAt`: Various attributes.
    - `newsletter`: Foreign key to `Newsletter`.
+
+5. **ArticleSummary**
+   - `id`: UUID-based unique identifier.
+   - `url: Unique URL.
+   - `summary`: Summary text.
+   - `usedBy`: Array of `UsedArticle` that used this summary.
 
 #### Relationships
 
 1. **Admin -> Newsletter**: One-to-Many
 2. **Newsletter -> ContentHistory**: One-to-Many
 3. **Newsletter -> UsedArticle**: One-to-Many
-4. **Composite Uniqueness in UsedArticle**: Defined by `@@unique` directive.
+4. **UsedArticle -> ArticleSummary**: One-to-One
+5. **ArticleSummary -> UsedArticle**: One-to-Many
 
 #### Constraints
 
