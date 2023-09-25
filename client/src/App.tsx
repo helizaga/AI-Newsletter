@@ -1,11 +1,11 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { QueryClient, QueryClientProvider } from "react-query"; // Add this
 import AuthenticatedApp from "./components/AuthenticatedApp";
 import LoginButton from "./components/auth/LoginButton";
 import axios from "axios";
 import { AdminContext } from "./contexts/AdminContext";
-
+import { AdminContextType } from "./types/common";
 const queryClient = new QueryClient();
 
 const App = () => {
@@ -28,7 +28,7 @@ const App = () => {
       {isLoading ? (
         "Loading..."
       ) : isAuthenticated ? (
-        <AdminContext.Provider value={admin}>
+        <AdminContext.Provider value={admin as AdminContextType}>
           <AuthenticatedApp />
         </AdminContext.Provider>
       ) : (

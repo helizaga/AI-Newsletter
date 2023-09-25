@@ -1,5 +1,4 @@
 // NewsletterList.js
-import React from "react";
 import { List, Typography } from "@mui/material";
 
 import { useNewsletterQuery } from "../hooks/useNewsletterQuery";

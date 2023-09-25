@@ -11,17 +11,18 @@ import { useNewsletterQuery } from "../hooks/useNewsletterQuery";
 import { useAdmin } from "../contexts/AdminContext";
 import { addEmails, deleteSelectedEmails } from "../services/apiService";
 
-const isValidEmail = (email) =>
+const isValidEmail = (email: string) =>
   /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email.trim());
 
 const EmailList = () => {
   const { sub: adminID } = useAdmin() || {};
   const { emailList, refetchEmails } = useNewsletterQuery();
-  const [selectedEmails, setSelectedEmails] = useState(new Set());
+  const [selectedEmails, setSelectedEmails] = useState<Set<string>>(new Set());
   const [emailInput, setEmailInput] = useState("");
   const [emailError, setEmailError] = useState(false);
 
   const handleAddEmails = async () => {
+    if (!adminID) return;
     const emails = emailInput.includes(",")
       ? emailInput.split(",")
       : [emailInput];
@@ -44,7 +45,7 @@ const EmailList = () => {
     await refetchEmails();
   };
 
-  const toggleEmailSelection = (email) => {
+  const toggleEmailSelection = (email: string) => {
     setSelectedEmails((prev) => {
       const updated = new Set(prev);
       updated.has(email) ? updated.delete(email) : updated.add(email);
@@ -76,7 +77,7 @@ const EmailList = () => {
       </div>
       <Typography variant="h6">Emails to Send To:</Typography>
       <List>
-        {emailList?.map((email, index) => (
+        {emailList?.map((email: string, index: number) => (
           <ListItem key={index}>
             <Checkbox
               checked={selectedEmails.has(email)}

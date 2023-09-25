@@ -1,21 +1,23 @@
-import React from "react";
+import { FC } from "react";
 import {
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   Button,
-  DialogContentText,
+  Typography,
 } from "@mui/material";
 
-const ConfirmRegenerateDialog = ({ isOpen, onClose, onConfirm }) => {
+import { DialogProps } from "../types/common";
+
+const ConfirmSendDialog: FC<DialogProps> = ({ isOpen, onClose, onConfirm }) => {
   return (
     <Dialog open={isOpen} onClose={onClose}>
-      <DialogTitle>Confirm Regeneration</DialogTitle>
+      <DialogTitle>Confirm Send</DialogTitle>
       <DialogContent>
-        <DialogContentText>
-          Are you sure you want to regenerate this newsletter?
-        </DialogContentText>
+        <Typography variant="body1">
+          Are you sure you want to send this newsletter?
+        </Typography>
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} color="secondary">
@@ -35,4 +37,4 @@ const ConfirmRegenerateDialog = ({ isOpen, onClose, onConfirm }) => {
   );
 };
 
-export default ConfirmRegenerateDialog;
+export default ConfirmSendDialog;

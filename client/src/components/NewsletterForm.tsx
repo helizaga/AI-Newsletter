@@ -26,9 +26,15 @@ const NewsletterForm = () => {
       <Button
         variant="contained"
         color="primary"
-        onClick={() =>
-          createNewsletterMutation.mutate({ adminID: admin.sub, topic, reason })
-        }
+        onClick={() => {
+          if (admin?.sub) {
+            createNewsletterMutation.mutate({
+              adminID: admin.sub,
+              topic,
+              reason,
+            });
+          }
+        }}
       >
         Create Newsletter
       </Button>

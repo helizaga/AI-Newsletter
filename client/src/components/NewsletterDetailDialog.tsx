@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, FC } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -8,7 +8,18 @@ import {
   Typography,
 } from "@mui/material";
 
-const NewsletterDetailDialog = ({ newsletter }) => {
+interface Newsletter {
+  id: string;
+  topic: string;
+  reason: string;
+  searchQuery: string;
+  content: string;
+  // add other fields here
+}
+
+const NewsletterDetailDialog: FC<{ newsletter: Newsletter }> = ({
+  newsletter,
+}) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const handleOpen = () => setIsOpen(true);

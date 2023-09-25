@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState, FC } from "react";
 import { useQueryClient } from "react-query";
 import { ListItem, Button, Typography } from "@mui/material";
 
@@ -12,9 +12,12 @@ import {
   regenerateNewsletter,
 } from "../services/apiService";
 import { useAdmin } from "../contexts/AdminContext";
+import { Newsletter } from "../types/common";
 
 // Extracted into a separate component
-export const NewsletterItem = ({ newsletter }) => {
+export const NewsletterItem: FC<{ newsletter: Newsletter }> = ({
+  newsletter,
+}) => {
   const queryClient = useQueryClient();
   const admin = useAdmin();
 
@@ -38,7 +41,7 @@ export const NewsletterItem = ({ newsletter }) => {
   const handleDeleteNewsletter = async () => {
     try {
       await deleteNewsletter(newsletter.id);
-      queryClient.invalidateQueries(["newsletters", admin.sub]);
+      queryClient.invalidateQueries(["newsletters", admin?.sub]);
     } catch (error) {
       console.error(
         `Failed to delete newsletter with ID ${newsletter.id}`,
@@ -51,7 +54,7 @@ export const NewsletterItem = ({ newsletter }) => {
     try {
       const regeneratedNewsletter = await regenerateNewsletter(
         newsletter.id,
-        admin.sub
+        admin?.sub as string
       );
       console.log(
         `Newsletter with ID ${newsletter.id} regenerated`,
@@ -68,7 +71,7 @@ export const NewsletterItem = ({ newsletter }) => {
   return (
     <>
       <ConfirmDeleteDialog
-        open={deleteDialogOpen}
+        isOpen={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}
         onConfirm={() => {
           handleDeleteNewsletter();

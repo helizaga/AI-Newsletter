@@ -1,5 +1,5 @@
 // ConfirmDeleteDialog.js
-import React from "react";
+import { FC } from "react";
 import {
   Dialog,
   DialogActions,
@@ -9,8 +9,14 @@ import {
   Button,
 } from "@mui/material";
 
-const ConfirmDeleteDialog = ({ open, onClose, onConfirm }) => (
-  <Dialog open={open} onClose={onClose}>
+import { DialogProps } from "../types/common";
+
+const ConfirmDeleteDialog: FC<DialogProps> = ({
+  isOpen,
+  onClose,
+  onConfirm,
+}) => (
+  <Dialog open={isOpen} onClose={onClose}>
     <DialogTitle>Confirm Deletion</DialogTitle>
     <DialogContent>
       <DialogContentText>
