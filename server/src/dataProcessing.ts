@@ -72,6 +72,17 @@ const sortArticles = async (
     .sort((a, b) => b.relevanceScore - a.relevanceScore);
 };
 
+const generateDummyURLs = (count: number): ArticleData[] => {
+  const dummyArticles: ArticleData[] = [];
+  for (let i = 1; i <= count; i++) {
+    dummyArticles.push({
+      url: `http://dummy${i}.com`,
+      text: `Dummy article ${i}`,
+    });
+  }
+  return dummyArticles;
+};
+
 async function processAndSortArticles(
   topic: string,
   reason: string,
@@ -81,24 +92,24 @@ async function processAndSortArticles(
   // const processedArticles = await processArticles(optimalSearchQuery, adminID);
   // return sortArticles(processedArticles, topic, reason);
   console.log("Dummy Processing and Sorting Articles");
-  return [
-    {
-      url: "http://dummy1.com",
-      text: "Dummy article 1",
-    },
-    {
-      url: "http://dummy2.com",
-      text: "Dummy article 2",
-    },
-    {
-      url: "http://dummy3.com",
-      text: "Dummy article 3",
-    },
-    {
-      url: "http://dummy4.com",
-      text: "Dummy article 4",
-    },
-  ];
+  return generateDummyURLs(100);
+}
+
+async function getOrGenerateSummary(
+  url: string,
+  rawText: string
+): Promise<string> {
+  const existingSummary = await prisma.articleSummary.findUnique({
+    where: { url },
+  });
+  if (existingSummary) {
+    return existingSummary.id;
+  }
+  const newSummaryText = await generateSummaryWithGPT([cleanText(rawText)]);
+  const newSummary = await prisma.articleSummary.create({
+    data: { url, summary: newSummaryText },
+  });
+  return newSummary.id;
 }
 
 // This function generates personalized content based on a given search term and reason.
@@ -139,12 +150,29 @@ const generatePersonalizedContent = async (
   const firstFourArticles = newArticles.slice(0, 4);
   console.log(firstFourArticles);
 
+  // More descriptive error handling
   if (firstFourArticles.length === 0) {
-    throw new Error("No relevant articles found.");
+    if (sortedArticles.length === 0) {
+      throw new Error(
+        "No relevant articles found. The search query may need refinement."
+      );
+    } else {
+      throw new Error(
+        "All available articles for this query have already been used."
+      );
+    }
   }
 
   if (firstFourArticles.length < 4) {
-    console.warn("Fewer than 4 articles found.");
+    if (sortedArticles.length < 4) {
+      console.warn(
+        "Fewer articles were found in the search. You may need to expand your search query."
+      );
+    } else {
+      console.warn(
+        "Fewer than 4 new articles found. Some articles were already used."
+      );
+    }
   }
 
   const summarizedText = await generateSummaryWithGPT(
@@ -161,4 +189,9 @@ const generatePersonalizedContent = async (
   return { content, optimalSearchQuery, firstFourArticles };
 };
 
-export { isArticleUsed, processAndSortArticles, generatePersonalizedContent };
+export {
+  isArticleUsed,
+  processAndSortArticles,
+  generatePersonalizedContent,
+  getOrGenerateSummary,
+};

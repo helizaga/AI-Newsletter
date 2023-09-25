@@ -1,11 +1,16 @@
 import express, { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import cors from "cors";
-import { generatePersonalizedContent, isArticleUsed } from "./dataProcessing";
+import {
+  generatePersonalizedContent,
+  isArticleUsed,
+  getOrGenerateSummary,
+} from "./dataProcessing";
 import dotenv from "dotenv";
 import { SESClient } from "@aws-sdk/client-ses";
 import { SendEmailCommand } from "@aws-sdk/client-ses";
 
+// Load environment variables
 dotenv.config();
 
 const app = express();
@@ -21,6 +26,7 @@ app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
 
+// AWS SES configuration
 const sesConfig = {
   region: process.env.AWS_REGION!,
   credentials: {
@@ -101,6 +107,11 @@ async function regenerateNewsletterHandler(req: Request, res: Response) {
             newsletter.reason
           ))
         ) {
+          const summaryID = await getOrGenerateSummary(
+            article.url,
+            article.text
+          );
+
           return prisma.usedArticle.create({
             data: {
               url: article.url,
@@ -109,6 +120,7 @@ async function regenerateNewsletterHandler(req: Request, res: Response) {
               topic: newsletter.topic,
               reason: newsletter.reason,
               createdAt: new Date(),
+              summaryID: summaryID, // Added this line
             },
           });
         }
@@ -361,6 +373,11 @@ async function createNewsletterHandler(req: Request, res: Response) {
       await Promise.all(
         firstFourArticles.map(async (article) => {
           if (!(await isArticleUsed(article.url, adminID, topic, reason))) {
+            const summaryID = await getOrGenerateSummary(
+              article.url,
+              article.text
+            );
+
             return prisma.usedArticle.create({
               data: {
                 url: article.url,
@@ -368,6 +385,7 @@ async function createNewsletterHandler(req: Request, res: Response) {
                 adminID,
                 topic: topic,
                 reason: reason,
+                summaryID: summaryID, // Added this line
                 createdAt: new Date(),
               },
             });

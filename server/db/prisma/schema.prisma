@@ -11,8 +11,9 @@ model Admin {
   id              String       @id @default(uuid())
   email           String       @unique
   name            String?
-  newsletters     Newsletter[]
-  mailingList     Json
+  newsletters     Newsletter[] @relation("AdminToNewsletters")
+
+  mailingList     String[]
 }
 
 
@@ -27,7 +28,7 @@ model Newsletter {
   reason          String
   searchQuery     String?
   contentHistory  ContentHistory[]  
-  admin           Admin         @relation(fields: [adminID], references: [id])
+  admin           Admin @relation("AdminToNewsletters", fields: [adminID], references: [id])
   usedArticles    UsedArticle[] @relation("UsedArticleToNewsletter")
 }
 
@@ -39,8 +40,11 @@ model UsedArticle {
   adminID          String
   topic           String
   reason          String
-  @@unique([url, adminID, topic, reason])
   newsletter      Newsletter @relation("UsedArticleToNewsletter", fields: [newsletterId], references: [id], onDelete: Cascade)
+  summaryID   String
+  summary     ArticleSummary @relation(fields: [summaryID], references: [id])
+  @@unique([url, adminID, topic, reason])
+  @@index([adminID, topic, reason])
 }
 
 model ContentHistory {
@@ -49,4 +53,11 @@ model ContentHistory {
   content         String
   createdAt       DateTime   @default(now())
   newsletter      Newsletter @relation(fields: [newsletterId], references: [id], onDelete: Cascade)
+}
+
+model ArticleSummary {
+  id         String      @id @default(uuid())
+  url        String      @unique
+  summary    String
+  usedBy     UsedArticle[]
 }
