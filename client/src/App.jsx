@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "react-query"; // Add this
 import AuthenticatedApp from "./components/AuthenticatedApp";
 import LoginButton from "./components/LoginButton";
 import axios from "axios";
+import { AdminContext } from "./contexts/AdminContext";
 
 const queryClient = new QueryClient();
 
@@ -27,7 +28,9 @@ const App = () => {
       {isLoading ? (
         "Loading..."
       ) : isAuthenticated ? (
-        <AuthenticatedApp admin={admin} />
+        <AdminContext.Provider value={admin}>
+          <AuthenticatedApp />
+        </AdminContext.Provider>
       ) : (
         <LoginButton />
       )}

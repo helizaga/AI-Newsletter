@@ -2,6 +2,14 @@ import axios from "axios";
 
 const API_BASE_URL = "http://localhost:3001/api";
 
+export const handleEmailOperation = async (apiEndpoint, payload) => {
+  try {
+    await axios.post(`${API_BASE_URL}${apiEndpoint}`, payload);
+  } catch (error) {
+    console.error(`Operation failed: ${error}`);
+  }
+};
+
 export const fetchEmails = async (adminId) => {
   const response = await axios.get(
     `${API_BASE_URL}/get-emails?adminId=${adminId}`

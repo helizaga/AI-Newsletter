@@ -1,13 +1,15 @@
 // NewsletterForm.js
-import React from "react";
+import React, { useState } from "react";
 import { TextField, Button } from "@mui/material";
 import { useNewsletterQuery } from "../hooks/useNewsletterQuery";
-import { useNewsletterState } from "../hooks/useNewsletterState";
+import { useAdmin } from "../contexts/AdminContext";
 
-const NewsletterForm = ({ admin }) => {
-  // Initialize React Query's client for cache manipulation
-  const { topic, setTopic, reason, setReason } = useNewsletterState();
-  const { createNewsletterMutation } = useNewsletterQuery(admin);
+const NewsletterForm = () => {
+  const admin = useAdmin();
+
+  const [topic, setTopic] = useState("");
+  const [reason, setReason] = useState("");
+  const { createNewsletterMutation } = useNewsletterQuery();
 
   return (
     <div style={{ margin: "20px" }}>

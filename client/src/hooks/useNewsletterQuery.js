@@ -4,9 +4,12 @@ import {
   fetchEmails,
   fetchNewsletters,
   createNewsletter,
-} from "../components/apiService";
+} from "../services/apiService";
+import { useAdmin } from "../contexts/AdminContext"; // Adjust path accordingly
 
-export const useNewsletterQuery = (admin) => {
+export const useNewsletterQuery = () => {
+  const admin = useAdmin();
+
   const queryClient = useQueryClient();
 
   const { data: emailList, refetch: refetchEmails } = useQuery(
