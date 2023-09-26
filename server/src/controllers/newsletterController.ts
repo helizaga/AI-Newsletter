@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
 import {
   generatePersonalizedContent,
-  isArticleUsed,
-  getOrGenerateSummary,
+  fetchUsedArticles,
+  addUsedArticles,
 } from "../dataProcessing";
 import { SendEmailCommand } from "@aws-sdk/client-ses";
 import { configureAWS } from "../../config/awsConfig";
@@ -17,13 +17,7 @@ export async function createNewsletterHandler(req: Request, res: Response) {
     const admin = await prisma.admin.findUnique({ where: { id: adminID } });
     if (admin) {
       // Fetch the set of used articles for this admin, topic, and reason
-      const usedArticles = await prisma.usedArticle.findMany({
-        where: {
-          adminID,
-          topic,
-          reason,
-        },
-      });
+      const usedArticles = await fetchUsedArticles(adminID, topic, reason);
       const usedArticleSet = new Set(usedArticles.map((ua) => ua.url));
       const { content, optimalSearchQuery, firstFourArticles } =
         await generatePersonalizedContent(
@@ -47,27 +41,12 @@ export async function createNewsletterHandler(req: Request, res: Response) {
       });
 
       // Update the UsedArticle table with certain conditions. i don't want this updated when an article is seen before by the same admin for the same topic and reason.
-      await Promise.all(
-        firstFourArticles.map(async (article) => {
-          if (!(await isArticleUsed(article.url, adminID, topic, reason))) {
-            const summaryID = await getOrGenerateSummary(
-              article.url,
-              article.text
-            );
-
-            return prisma.usedArticle.create({
-              data: {
-                url: article.url,
-                newsletterId: newsletter.id,
-                adminID,
-                topic: topic,
-                reason: reason,
-                summaryID: summaryID, // Added this line
-                createdAt: new Date(),
-              },
-            });
-          }
-        })
+      await addUsedArticles(
+        firstFourArticles,
+        adminID,
+        topic,
+        reason,
+        newsletter.id
       );
 
       console.log(
@@ -122,14 +101,11 @@ export async function regenerateNewsletterHandler(req: Request, res: Response) {
     if (!newsletter) {
       return res.status(404).json({ error: "Newsletter not found" });
     }
-
-    const usedArticles = await prisma.usedArticle.findMany({
-      where: {
-        adminID: adminID,
-        topic: newsletter.topic,
-        reason: newsletter.reason,
-      },
-    });
+    const usedArticles = await fetchUsedArticles(
+      adminID,
+      newsletter.topic,
+      newsletter.reason
+    );
 
     const usedArticleSet = new Set(usedArticles.map((article) => article.url));
 
@@ -155,34 +131,12 @@ export async function regenerateNewsletterHandler(req: Request, res: Response) {
       },
     });
 
-    await Promise.all(
-      firstFourArticles.map(async (article) => {
-        if (
-          !(await isArticleUsed(
-            article.url,
-            adminID,
-            newsletter.topic,
-            newsletter.reason
-          ))
-        ) {
-          const summaryID = await getOrGenerateSummary(
-            article.url,
-            article.text
-          );
-
-          return prisma.usedArticle.create({
-            data: {
-              url: article.url,
-              newsletterId: Number(newsletterId),
-              adminID: adminID,
-              topic: newsletter.topic,
-              reason: newsletter.reason,
-              createdAt: new Date(),
-              summaryID: summaryID, // Added this line
-            },
-          });
-        }
-      })
+    await addUsedArticles(
+      firstFourArticles,
+      adminID,
+      newsletter.topic,
+      newsletter.reason,
+      newsletter.id
     );
 
     return res
