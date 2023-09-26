@@ -50,11 +50,6 @@ export async function addUsedArticles(
   );
 }
 
-const getRandomRelevancyScore = () => {
-  // Generate a random float between 0 and 1
-  return Math.random();
-};
-
 const generateDummyURLs = (count: number): ArticleData[] => {
   const dummyArticles: ArticleData[] = [];
   for (let i = 1; i <= count; i++) {
