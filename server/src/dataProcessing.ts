@@ -1,37 +1,15 @@
-import { queryBingSearchAPI } from "../../services/bing/bing";
+import { queryBingSearchAPI } from "./services/bing/bing";
 import { scrapeWebContent, cleanText } from "../utils/utils";
-import { getRelevanceScore } from "../../services/gpt/gpt";
 import {
   generateSummaryWithGPT,
   generateNewsletterWithGPT,
   generateOptimalBingSearchQuery,
-} from "../../services/gpt/gpt";
+  getRelevanceScore,
+} from "./services/gpt/gpt";
+
+import { ArticleData } from "./types/common";
 
 import { prisma } from "../db/prisma/prismaClient";
-
-interface ArticleData {
-  url: string;
-  text: string;
-  relevanceScore?: number; // Add this line
-}
-
-// dataProcessing.ts
-async function isArticleUsed(
-  url: string,
-  adminID: string,
-  topic: string,
-  reason: string
-): Promise<boolean> {
-  const usedArticle = await prisma.usedArticle.findFirst({
-    where: {
-      url: url,
-      adminID: adminID, // new field
-      topic: topic, // new field
-      reason: reason, // new field
-    },
-  });
-  return Boolean(usedArticle);
-}
 
 export async function fetchUsedArticles(
   adminID: string,
@@ -245,7 +223,6 @@ const generatePersonalizedContent = async (
 };
 
 export {
-  isArticleUsed,
   processAndSortArticles,
   generatePersonalizedContent,
   getOrGenerateSummary,

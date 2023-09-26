@@ -8,14 +8,7 @@ import {
   Typography,
 } from "@mui/material";
 
-interface Newsletter {
-  id: string;
-  topic: string;
-  reason: string;
-  searchQuery: string;
-  content: string;
-  // add other fields here
-}
+import { Newsletter } from "../types/common";
 
 const NewsletterDetailDialog: FC<{ newsletter: Newsletter }> = ({
   newsletter,

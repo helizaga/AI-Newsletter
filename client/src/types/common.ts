@@ -5,7 +5,7 @@ export interface AdminContextType {
 }
 
 export interface Newsletter {
-  id: string;
+  id: number;
   topic: string;
   reason: string;
   searchQuery: string;
@@ -16,4 +16,8 @@ export interface DialogProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
+}
+
+export interface PayloadType {
+  [key: string]: any;
 }

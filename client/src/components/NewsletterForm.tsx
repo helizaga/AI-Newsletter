@@ -9,7 +9,13 @@ const NewsletterForm = () => {
 
   const [topic, setTopic] = useState("");
   const [reason, setReason] = useState("");
-  const { createNewsletterMutation } = useNewsletterQuery();
+  const { createNewsletterMutation, newsletters } = useNewsletterQuery();
+
+  const isDuplicate = newsletters?.some(
+    (newsletter) => newsletter.topic === topic && newsletter.reason === reason
+  );
+
+  const isInvalid = !topic.trim() || !reason.trim() || isDuplicate;
 
   return (
     <div style={{ margin: "20px" }}>
@@ -26,18 +32,30 @@ const NewsletterForm = () => {
       <Button
         variant="contained"
         color="primary"
+        disabled={isInvalid} // Disable the button if it's a duplicate
         onClick={() => {
           if (admin?.sub) {
-            createNewsletterMutation.mutate({
-              adminID: admin.sub,
-              topic,
-              reason,
-            });
+            createNewsletterMutation.mutate(
+              {
+                adminID: admin.sub,
+                topic,
+                reason,
+              },
+              {
+                onSuccess: () => {
+                  setTopic("");
+                  setReason(""); // Clear the form upon successful mutation
+                },
+              }
+            );
           }
         }}
       >
         Create Newsletter
       </Button>
+      {isDuplicate && (
+        <p>A newsletter with this topic and reason already exists.</p>
+      )}
     </div>
   );
 };

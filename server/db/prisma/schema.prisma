@@ -26,6 +26,7 @@ model Newsletter {
   adminID         String
   topic           String
   reason          String
+  @@unique([topic, reason])
   searchQuery     String?
   contentHistory  ContentHistory[]  
   admin           Admin @relation("AdminToNewsletters", fields: [adminID], references: [id])

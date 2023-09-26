@@ -101,7 +101,6 @@ This section details the relationships and constraints among the database models
 
 #### Data Processing (`dataprocessing.ts`)
 
-- `isArticleUsed`: Article reuse validation.
 - `processArticles`: Article filtering.
 - `sortArticles`: Article ranking.
 

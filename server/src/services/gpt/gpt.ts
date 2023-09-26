@@ -3,14 +3,9 @@ import { Tiktoken } from "tiktoken/lite";
 import { load } from "tiktoken/load";
 import registry from "tiktoken/registry.json";
 import models from "tiktoken/model_to_encoding.json";
-
+import { Message } from "../../types/common";
 const GPT_API_KEY = process.env.GPT_API_KEY as string;
 const GPT_API_ENDPOINT = "https://api.openai.com/v1/chat/completions";
-
-interface Message {
-  role: string;
-  content: string;
-}
 
 let totalCost = 0;
 

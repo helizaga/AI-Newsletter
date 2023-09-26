@@ -1,11 +1,7 @@
 import axios from "axios";
+import { PayloadType } from "../types/common";
 
 const API_BASE_URL = "http://localhost:3001/api";
-
-interface PayloadType {
-  // Define the structure of your payload here
-  [key: string]: any;
-}
 
 export const handleEmailOperation = async (
   apiEndpoint: string,
@@ -59,16 +55,16 @@ export const deleteSelectedEmails = async (
   });
 };
 
-export const deleteNewsletter = async (newsletterId: string) => {
+export const deleteNewsletter = async (newsletterId: number) => {
   await axios.delete(`${API_BASE_URL}/newsletters/${newsletterId}`);
 };
 
-export const sendNewsletter = async (newsletterId: string) => {
+export const sendNewsletter = async (newsletterId: number) => {
   await axios.post(`${API_BASE_URL}/newsletters/send`, { newsletterId });
 };
 
 export const regenerateNewsletter = async (
-  newsletterId: string,
+  newsletterId: number,
   adminID: string
 ) => {
   const response = await axios.post(`${API_BASE_URL}/newsletters/regenerate`, {

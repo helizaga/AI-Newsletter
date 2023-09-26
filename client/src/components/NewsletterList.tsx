@@ -6,7 +6,7 @@ import { NewsletterItem } from "./NewsletterItem";
 
 const NewsletterList = () => {
   const { newsletters } = useNewsletterQuery();
-
+  console.log(newsletters);
   return (
     <div>
       <Typography variant="h6">Your Newsletters</Typography>
