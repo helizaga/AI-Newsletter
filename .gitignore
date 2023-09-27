@@ -3,3 +3,4 @@ node_modules/
 dist/
 .aider*
 project_structure.text
+.cosine
