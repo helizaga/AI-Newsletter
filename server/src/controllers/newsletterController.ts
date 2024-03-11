@@ -82,6 +82,7 @@ export async function getNewslettersHandler(req: Request, res: Response) {
 
   const newsletters = await prisma.newsletter.findMany({
     where: { adminID: adminId },
+    include: { contentHistory: true },
   });
   res.json(newsletters);
 }
