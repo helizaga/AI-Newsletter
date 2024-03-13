@@ -13,7 +13,6 @@ const sesClient = configureAWS();
 export async function createNewsletterHandler(req: Request, res: Response) {
   try {
     const { adminID, topic, reason } = req.body;
-    console.log(adminID);
     const admin = await prisma.admin.findUnique({ where: { id: adminID } });
     if (admin) {
       // Fetch the set of used articles for this admin, topic, and reason
@@ -49,10 +48,6 @@ export async function createNewsletterHandler(req: Request, res: Response) {
         newsletter.id
       );
 
-      console.log(
-        "Created new newsletter from createNewsletterHandler: ",
-        newsletter
-      );
       return res.status(200).json({ message: "Newsletter created", content });
     }
     return res.status(404).json({ error: "Admin not found" });

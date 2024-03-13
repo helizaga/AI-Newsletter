@@ -16,38 +16,42 @@ export async function generateChatCompletion(
   maxTokens: number | null = null
 ): Promise<string> {
   // Implement your function logic here.
-  // const headers = {
-  //   "Content-Type": "application/json",
-  //   Authorization: `Bearer ${GPT_API_KEY}`,
-  // };
-  // const data: any = {
-  //   model,
-  //   messages,
-  //   temperature,
-  // };
-  // if (maxTokens !== null) {
-  //   data.max_tokens = maxTokens;
-  // }
-  // try {
-  //   const response = await axios.post(GPT_API_ENDPOINT, data, { headers });
-  //   const content = response.data.choices[0].message.content;
-  //   // Set the cost per 1000 tokens for each model
-  //   const costPerThousandTokensInput = model === "gpt-4" ? 0.03 : 0.003; // Set the cost per 1000 tokens for input
-  //   const costPerThousandTokensOutput = model === "gpt-4" ? 0.06 : 0.004; // Set the cost per 1000 tokens for output
-  //   // Count tokens for the input messages as well
-  //   for (const message of messages) {
-  //     await countTokens(message.content, model, costPerThousandTokensInput);
-  //   }
-  //   // Count tokens for the output
-  //   await countTokens(content, model, costPerThousandTokensOutput);
-  //   return content;
-  // } catch (error: any) {
-  //   console.error(error.response || error); // Log the full error response
-  //   throw new Error(
-  //     `Error ${error.response.status}: ${error.response.statusText}`
-  //   );
-  // }
-  return "This is a dummy completion.";
+  const headers = {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${GPT_API_KEY}`,
+  };
+  const data: any = {
+    model,
+    messages,
+    temperature,
+  };
+  if (maxTokens !== null) {
+    data.max_tokens = maxTokens;
+  }
+  try {
+    const response = await axios.post(GPT_API_ENDPOINT, data, { headers });
+    const content = response.data.choices[0].message.content;
+    // Set the cost per 1000 tokens for each model
+    const costPerThousandTokensInput = 0.5 / 1000; // $0.0005 per token
+    const costPerThousandTokensOutput = 1.5 / 1000; // $0.0015 per token
+
+    // Count tokens for the input messages as well
+    for (const message of messages) {
+      await countTokens(message.content, model, costPerThousandTokensInput);
+    }
+    // Count tokens for the output
+    await countTokens(content, model, costPerThousandTokensOutput);
+    return content;
+  } catch (error: any) {
+    console.error(error.response || error); // Log the full error response
+    throw new Error(
+      `Error ${error.response.status}: ${error.response.statusText}`
+    );
+  }
+  // console.log("model:", model);
+  // await countTokens("Hello", model, 0.03);
+  // return "" + totalCost;
+  //return "This is a dummy completion.";
 }
 
 async function countTokens(
@@ -89,7 +93,7 @@ async function generateOptimalBingSearchQuery(
 
   const searchQuery: string = await generateChatCompletion(
     messages,
-    "gpt-4",
+    "gpt-3.5-turbo-0125",
     0.7,
     200
   );
@@ -117,7 +121,7 @@ async function generateSummaryWithGPT(
 
     const summary: string = await generateChatCompletion(
       messages,
-      "gpt-3.5-turbo-16k",
+      "gpt-3.5-turbo-0125",
       0.7,
       700
     );
@@ -140,7 +144,7 @@ async function generateNewsletterWithGPT(
   const messages: Message[] = [
     {
       role: "system",
-      content: `You are an AI tasked with creating a customized newsletter for a user. The newsletter should be written in a style similar to a Medium post and should be informative and engaging. Your task includes the following:
+      content: `You are an AI tasked with creating a customized newsletter for a user without mentioning specific businesses, brands, or commercial services. The newsletter should be written in a style similar to a Medium post and should be informative and engaging. Your task includes the following:
       - The newsletter should have several sections, each teaching the reader something new.
       - Each section should transition seamlessly into the next.
       - Embed URLs into the newsletter where appropriate.
@@ -160,10 +164,12 @@ async function generateNewsletterWithGPT(
 
   const newsletterContent: string = await generateChatCompletion(
     messages,
-    "gpt-3.5-turbo-16k",
+    "gpt-3.5-turbo-0125",
     0.5, // Adjust this value based on the quality of the generated content
     4000
   );
+  console.log("total cost: ", totalCost);
+  totalCost = 0;
 
   return newsletterContent;
 }
@@ -189,12 +195,10 @@ async function getRelevanceScore(
 
   const score: string = await generateChatCompletion(
     messages,
-    "gpt-3.5-turbo-16k",
+    "gpt-3.5-turbo-0125",
     0.7,
     50
   );
-
-  console.log("Relevance score: ", score);
 
   return parseFloat(score);
 }

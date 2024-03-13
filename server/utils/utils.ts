@@ -12,32 +12,32 @@ async function getBrowserInstance() {
 
 // This function scrapes web content from a given URL and returns the cleaned text.
 export async function scrapeWebContent(url: string): Promise<string> {
-  // const browser = await getBrowserInstance();
-  // const page = await browser.newPage();
-  // let cleanedContent = "";
-  // try {
-  //   await page.goto(url, { waitUntil: "networkidle2" });
-  //   // Extract the text content of the relevant elements
-  //   const content = await page.evaluate(() => {
-  //     let text = "";
-  //     const elements = document.querySelectorAll("p, h1, h2, h3, article");
-  //     for (const element of elements) {
-  //       // Skip if the element is a script tag
-  //       if (element.tagName.toLowerCase() !== "script") {
-  //         text += element.textContent + "\\n";
-  //       }
-  //     }
-  //     return text;
-  //   });
-  //   // Clean the text
-  //   cleanedContent = cleanText(content);
-  // } catch (error) {
-  //   console.error(`Error scraping ${url}:`, error);
-  // } finally {
-  //   await page.close();
-  // }
-  // return cleanedContent;
-  return "This is dummy web content for testing.";
+  const browser = await getBrowserInstance();
+  const page = await browser.newPage();
+  let cleanedContent = "";
+  try {
+    await page.goto(url, { waitUntil: "networkidle2" });
+    // Extract the text content of the relevant elements
+    const content = await page.evaluate(() => {
+      let text = "";
+      const elements = document.querySelectorAll("p, h1, h2, h3, article");
+      for (const element of elements) {
+        // Skip if the element is a script tag
+        if (element.tagName.toLowerCase() !== "script") {
+          text += element.textContent + "\\n";
+        }
+      }
+      return text;
+    });
+    // Clean the text
+    cleanedContent = cleanText(content);
+  } catch (error) {
+    console.error(`Error scraping ${url}:`, error);
+  } finally {
+    await page.close();
+  }
+  return cleanedContent;
+  //return "This is dummy web content for testing.";
 }
 
 // This function cleans raw text by trimming whitespace and removing extra spaces.

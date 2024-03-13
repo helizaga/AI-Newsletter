@@ -29,7 +29,6 @@ export const NewsletterItem: FC<{ newsletter: Newsletter }> = ({
   const handleSendNewsletterClick = async () => {
     try {
       await sendNewsletter(newsletter.id);
-      console.log(`Newsletter with ID ${newsletter.id} sent`);
     } catch (error) {
       console.error(
         `Failed to send newsletter with ID ${newsletter.id}`,
