@@ -197,7 +197,7 @@ const generatePersonalizedContent = async (
   const content = await generateNewsletterWithGPT(
     topic,
     reason,
-    summarizedText as string,
+    summarizedText,
     firstFourArticles.map(({ url }) => url)
   );
 

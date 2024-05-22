@@ -6,6 +6,7 @@ import models from "tiktoken/model_to_encoding.json";
 const GPT_API_KEY = process.env.GPT_API_KEY as string;
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { StringOutputParser } from "@langchain/core/output_parsers";
 
 let totalCost = 0;
 
@@ -13,6 +14,10 @@ const openai = new ChatOpenAI({
   apiKey: GPT_API_KEY,
   temperature: 0.7,
 });
+
+const parser = new StringOutputParser();
+
+const chain = openai.pipe(parser);
 
 export async function generateChatCompletion(
   messages: (SystemMessage | HumanMessage)[],
@@ -24,24 +29,21 @@ export async function generateChatCompletion(
   openai.model = model;
   openai.maxTokens = maxTokens ?? undefined;
   try {
-    const response = await openai.invoke(messages);
-    const content = response.content;
+    const contentString = await chain.invoke(messages);
     // Set the cost per 1000 tokens for each model
     const costPerThousandTokensInput = 0.5 / 1000; // $0.0005 per token
     const costPerThousandTokensOutput = 1.5 / 1000; // $0.0015 per token
 
     // Count tokens for the input messages as well
+
     for (const message of messages) {
       //convert to string from MessageContent
-      await countTokens(
-        message.content as string,
-        model,
-        costPerThousandTokensInput
-      );
+      let messageContent = await parser.invoke(message);
+      await countTokens(messageContent, model, costPerThousandTokensInput);
     }
     // Count tokens for the output
-    await countTokens(content as string, model, costPerThousandTokensOutput);
-    return content as string;
+    await countTokens(contentString, model, costPerThousandTokensOutput);
+    return contentString;
   } catch (error: any) {
     console.error(error.response || error); // Log the full error response
     throw new Error(
@@ -88,7 +90,7 @@ async function generateOptimalBingSearchQuery(
     ),
   ];
 
-  const searchQuery: MessageContent = await generateChatCompletion(
+  const searchQuery: string = await generateChatCompletion(
     messages,
     "gpt-3.5-turbo-0125",
     0.7,
@@ -112,7 +114,7 @@ async function generateSummaryWithGPT(
       new HumanMessage(`Summarize the following article: ${article}`),
     ];
 
-    const summary: MessageContent = await generateChatCompletion(
+    const summary: string = await generateChatCompletion(
       messages,
       "gpt-3.5-turbo-0125",
       0.7,

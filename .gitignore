@@ -5,3 +5,4 @@ dist/
 project_structure.text
 .cosine
 my_patch_file.patch
+changes.patch
