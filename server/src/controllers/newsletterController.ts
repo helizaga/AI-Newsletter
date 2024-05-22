@@ -10,6 +10,13 @@ import { configureAWS } from "../../config/awsConfig";
 import { prisma } from "../../db/prisma/prismaClient";
 const sesClient = configureAWS();
 
+/**
+ * Creates a newsletter based on the provided adminID, topic, and reason.
+ *
+ * @param {Request} req - the request object containing adminID, topic, and reason
+ * @param {Response} res - the response object to send back the result
+ * @return {Promise<void>} Promise that resolves once newsletter creation is complete
+ */
 export async function createNewsletterHandler(req: Request, res: Response) {
   try {
     const { adminID, topic, reason } = req.body;
@@ -19,12 +26,7 @@ export async function createNewsletterHandler(req: Request, res: Response) {
       const usedArticles = await fetchUsedArticles(adminID, topic, reason);
       const usedArticleSet = new Set(usedArticles.map((ua) => ua.url));
       const { content, optimalSearchQuery, firstFourArticles } =
-        await generatePersonalizedContent(
-          topic,
-          reason,
-          adminID,
-          usedArticleSet
-        );
+        await generatePersonalizedContent(topic, reason, usedArticleSet);
       const newsletter = await prisma.newsletter.create({
         data: {
           adminID,
@@ -57,6 +59,13 @@ export async function createNewsletterHandler(req: Request, res: Response) {
   }
 }
 
+/**
+ * Deletes a newsletter item.
+ *
+ * @param {Request} req - The request object.
+ * @param {Response} res - The response object.
+ * @return {Promise<void>} - A promise that resolves when the newsletter item is deleted.
+ */
 export async function deleteNewsletterHandler(req: Request, res: Response) {
   const { id } = req.params;
   try {
@@ -70,6 +79,13 @@ export async function deleteNewsletterHandler(req: Request, res: Response) {
   }
 }
 
+/**
+ * Retrieves newsletters based on the provided admin ID.
+ *
+ * @param {Request} req - The request object containing the query parameter 'adminId'.
+ * @param {Response} res - The response object used to send the newsletters.
+ * @return {Promise<void>} - A promise that resolves when the newsletters are sent.
+ */
 export async function getNewslettersHandler(req: Request, res: Response) {
   const adminId = req.query.adminId as string;
   if (!adminId)
@@ -82,6 +98,13 @@ export async function getNewslettersHandler(req: Request, res: Response) {
   res.json(newsletters);
 }
 
+/**
+ * Handles the request to regenerate a newsletter.
+ *
+ * @param {Request} req - The request object.
+ * @param {Response} res - The response object.
+ * @return {Promise<void>} - A promise that resolves when the newsletter content is regenerated.
+ */
 export async function regenerateNewsletterHandler(req: Request, res: Response) {
   const { newsletterId, adminID } = req.body;
   if (!newsletterId || !adminID) {
@@ -109,7 +132,6 @@ export async function regenerateNewsletterHandler(req: Request, res: Response) {
     const { content, firstFourArticles } = await generatePersonalizedContent(
       newsletter.topic,
       newsletter.reason,
-      adminID,
       usedArticleSet // Pass this as an additional parameter
     );
 
@@ -144,6 +166,13 @@ export async function regenerateNewsletterHandler(req: Request, res: Response) {
   }
 }
 
+/**
+ * Sends a newsletter to a list of recipients.
+ *
+ * @param {Request} req - The request object.
+ * @param {Response} res - The response object.
+ * @return {Promise<void>} - A promise that resolves when the newsletter is sent successfully.
+ */
 export async function sendNewsletterHandler(req: Request, res: Response) {
   const { newsletterId } = req.body;
 

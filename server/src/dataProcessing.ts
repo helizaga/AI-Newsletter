@@ -63,10 +63,7 @@ export async function addUsedArticles(
 // };
 
 const processArticles = async (
-  optimalSearchQuery: string,
-  adminID: string,
-  topic: string,
-  reason: string
+  optimalSearchQuery: string
 ): Promise<ArticleData[]> => {
   const searchResults = await queryBingSearchAPI(optimalSearchQuery);
   const urls = searchResults.map((result) => result.url);
@@ -116,15 +113,9 @@ const sortArticles = async (
 async function processAndSortArticles(
   topic: string,
   reason: string,
-  optimalSearchQuery: string,
-  adminID: string
+  optimalSearchQuery: string
 ): Promise<ArticleData[]> {
-  const processedArticles = await processArticles(
-    optimalSearchQuery,
-    adminID,
-    topic,
-    reason
-  );
+  const processedArticles = await processArticles(optimalSearchQuery);
   return sortArticles(processedArticles, topic, reason);
 }
 
@@ -152,7 +143,6 @@ async function getOrGenerateSummary(
 const generatePersonalizedContent = async (
   topic: string,
   reason: string,
-  adminId: string,
   usedArticleSet: Set<string> // New parameter
 ): Promise<{
   content: string;
@@ -165,7 +155,6 @@ const generatePersonalizedContent = async (
   );
   const allSortedArticles = await processAndSortArticles(
     optimalSearchQuery,
-    adminId,
     topic,
     reason
   );
@@ -208,7 +197,7 @@ const generatePersonalizedContent = async (
   const content = await generateNewsletterWithGPT(
     topic,
     reason,
-    summarizedText,
+    summarizedText as string,
     firstFourArticles.map(({ url }) => url)
   );
 

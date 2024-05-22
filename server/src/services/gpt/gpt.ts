@@ -1,47 +1,47 @@
-import axios from "axios";
+import { MessageContent } from "@langchain/core/messages";
 import { Tiktoken } from "tiktoken/lite";
 import { load } from "tiktoken/load";
 import registry from "tiktoken/registry.json";
 import models from "tiktoken/model_to_encoding.json";
-import { Message } from "../../types/common";
 const GPT_API_KEY = process.env.GPT_API_KEY as string;
-const GPT_API_ENDPOINT = "https://api.openai.com/v1/chat/completions";
+import { ChatOpenAI } from "@langchain/openai";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
 let totalCost = 0;
 
+const openai = new ChatOpenAI({
+  apiKey: GPT_API_KEY,
+  temperature: 0.7,
+});
+
 export async function generateChatCompletion(
-  messages: Message[],
+  messages: (SystemMessage | HumanMessage)[],
   model: string,
   temperature: number = 0.7,
   maxTokens: number | null = null
 ): Promise<string> {
-  // Implement your function logic here.
-  const headers = {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${GPT_API_KEY}`,
-  };
-  const data: any = {
-    model,
-    messages,
-    temperature,
-  };
-  if (maxTokens !== null) {
-    data.max_tokens = maxTokens;
-  }
+  openai.temperature = temperature;
+  openai.model = model;
+  openai.maxTokens = maxTokens ?? undefined;
   try {
-    const response = await axios.post(GPT_API_ENDPOINT, data, { headers });
-    const content = response.data.choices[0].message.content;
+    const response = await openai.invoke(messages);
+    const content = response.content;
     // Set the cost per 1000 tokens for each model
     const costPerThousandTokensInput = 0.5 / 1000; // $0.0005 per token
     const costPerThousandTokensOutput = 1.5 / 1000; // $0.0015 per token
 
     // Count tokens for the input messages as well
     for (const message of messages) {
-      await countTokens(message.content, model, costPerThousandTokensInput);
+      //convert to string from MessageContent
+      await countTokens(
+        message.content as string,
+        model,
+        costPerThousandTokensInput
+      );
     }
     // Count tokens for the output
-    await countTokens(content, model, costPerThousandTokensOutput);
-    return content;
+    await countTokens(content as string, model, costPerThousandTokensOutput);
+    return content as string;
   } catch (error: any) {
     console.error(error.response || error); // Log the full error response
     throw new Error(
@@ -79,19 +79,16 @@ async function generateOptimalBingSearchQuery(
   topic: string,
   reason: string
 ): Promise<string> {
-  const messages: Message[] = [
-    {
-      role: "system",
-      content: `You are an AI tasked with generating the best Bing search query for a given topic and reason. Provide the search query without any intro or closer.
-      Don't wrap the search query in quotes.`,
-    },
-    {
-      role: "user",
-      content: `What's the best Bing search query to research ${topic} for the purpose of ${reason}?`,
-    },
+  const messages = [
+    new SystemMessage(
+      `You are an AI tasked with generating the best Bing search query for a given topic and reason. Provide the search query without any intro or closer. Don't wrap the search query in quotes.`
+    ),
+    new HumanMessage(
+      `What's the best Bing search query to research ${topic} for the purpose of ${reason}?`
+    ),
   ];
 
-  const searchQuery: string = await generateChatCompletion(
+  const searchQuery: MessageContent = await generateChatCompletion(
     messages,
     "gpt-3.5-turbo-0125",
     0.7,
@@ -108,18 +105,14 @@ async function generateSummaryWithGPT(
   const summaries: string[] = [];
 
   for (const article of processedData) {
-    const messages: Message[] = [
-      {
-        role: "system",
-        content: `You are an AI tasked with summarizing the content of an article. Generate a summary of 200-300 words.`,
-      },
-      {
-        role: "user",
-        content: `Summarize the following article: ${article}`,
-      },
+    const messages = [
+      new SystemMessage(
+        `You are an AI tasked with summarizing the content of an article. Generate a summary of 200-300 words.`
+      ),
+      new HumanMessage(`Summarize the following article: ${article}`),
     ];
 
-    const summary: string = await generateChatCompletion(
+    const summary: MessageContent = await generateChatCompletion(
       messages,
       "gpt-3.5-turbo-0125",
       0.7,
@@ -141,25 +134,19 @@ async function generateNewsletterWithGPT(
   summarizedText: string,
   urls: string[]
 ): Promise<string> {
-  const messages: Message[] = [
-    {
-      role: "system",
-      content: `You are an AI tasked with creating a customized newsletter for a user without mentioning specific businesses, brands, or commercial services. The newsletter should be written in a style similar to a Medium post and should be informative and engaging. Your task includes the following:
-      - The newsletter should have several sections, each teaching the reader something new.
-      - Each section should transition seamlessly into the next.
-      - Embed URLs into the newsletter where appropriate.
-      - Ensure the content is comprehensive and engaging for the reader.
-      - Maintain a conversational yet informative tone throughout.
-      - Use Markdown formatting and emojis.
-      - Reference the articles you used to generate the newsletter as outside sources.`,
-    },
-    {
-      role: "user",
-      content: `Write a newsletter about ${topic} using the following summarized text and URLs:
-      - Summarized text: ${summarizedText}
-      - URLs: ${JSON.stringify(urls)}
-      - I want this newsletter because ${reason}.`,
-    },
+  const messages = [
+    new SystemMessage(`You are an AI tasked with creating a customized newsletter for a user without mentioning specific businesses, brands, or commercial services. The newsletter should be written in a style similar to a Medium post and should be informative and engaging. Your task includes the following:
+    - The newsletter should have several sections, each teaching the reader something new.
+    - Each section should transition seamlessly into the next.
+    - Embed URLs into the newsletter where appropriate.
+    - Ensure the content is comprehensive and engaging for the reader.
+    - Maintain a conversational yet informative tone throughout.
+    - Use Markdown formatting and emojis.
+    - Reference the articles you used to generate the newsletter as outside sources.`),
+    new HumanMessage(`Write a newsletter about ${topic} using the following summarized text and URLs:
+    - Summarized text: ${summarizedText}
+    - URLs: ${JSON.stringify(urls)}
+    - I want this newsletter because ${reason}.`),
   ];
 
   const newsletterContent: string = await generateChatCompletion(
@@ -182,15 +169,13 @@ async function getRelevanceScore(
   if (article.trim() === "") {
     return 0;
   }
-  const messages: Message[] = [
-    {
-      role: "system",
-      content: `You are an AI tasked with determining the relevance of an article to a given topic and reason. Provide a relevance score between 0 and 1, where 1 is highly relevant and 0 is not relevant at all. Please respond with a number only.`,
-    },
-    {
-      role: "user",
-      content: `Rate the relevance of this article to the topic "${topic}" and the reason "${reason}": ${article}`,
-    },
+  const messages = [
+    new SystemMessage(
+      `You are an AI tasked with determining the relevance of an article to a given topic and reason. Provide a relevance score between 0 and 1, where 1 is highly relevant and 0 is not relevant at all. Please respond with a number only.`
+    ),
+    new HumanMessage(
+      `Rate the relevance of this article to the topic "${topic}" and the reason "${reason}": ${article}`
+    ),
   ];
 
   const score: string = await generateChatCompletion(

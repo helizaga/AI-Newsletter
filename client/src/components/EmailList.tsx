@@ -11,9 +11,18 @@ import { useEmailQuery } from "../hooks/useEmailQuery";
 import { useAdmin } from "../contexts/AdminContext";
 import { addEmails, deleteSelectedEmails } from "../services/apiService";
 
+/**
+ * Checks if the given email is valid.
+ *
+ * @param {string} email - The email to be validated.
+ * @return {boolean} Returns true if the email is valid, false otherwise.
+ */
 const isValidEmail = (email: string) =>
   /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email.trim());
 
+/**
+ * Renders a component that displays a list of emails and allows the user to add and delete emails.
+ */
 const EmailList = () => {
   const { sub: adminID } = useAdmin() || {};
   const { emailList, refetchEmails } = useEmailQuery();

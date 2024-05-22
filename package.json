@@ -6,10 +6,13 @@
   "scripts": {
     "start": "tsc && concurrently \"cd client && npm start\" \"npm run start:server\"",
     "start:server": "node dist/server/src/index.js",
-    "build": "tsc"
+    "build": "tsc && cd client && npm run build",
+    "build:server": "tsc"
   },
   "dependencies": {
     "@aws-sdk/client-ses": "^3.414.0",
+    "@langchain/core": "^0.2.0",
+    "@langchain/openai": "^0.0.33",
     "@prisma/client": "^5.3.1",
     "@types/puppeteer": "^7.0.4",
     "aws-sdk": "^2.1460.0",
@@ -20,7 +23,8 @@
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "he": "^1.2.0",
-    "puppeteer": "^20.8.0",
+    "langchain": "^0.2.0",
+    "puppeteer": "^20.9.0",
     "tiktoken": "^1.0.10"
   },
   "keywords": [],

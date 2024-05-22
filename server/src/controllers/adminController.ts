@@ -2,6 +2,13 @@ import { Request, Response } from "express";
 
 import { prisma } from "../../db/prisma/prismaClient";
 
+/**
+ * Handles the request to get emails for a specific admin.
+ *
+ * @param {Request} req - the request object
+ * @param {Response} res - the response object
+ * @return {Promise<void>} json response with the mailing list of the admin
+ */
 export async function getEmailsHandler(req: Request, res: Response) {
   const adminId = req.query.adminId;
   if (typeof adminId !== "string") {
@@ -15,7 +22,13 @@ export async function getEmailsHandler(req: Request, res: Response) {
   }
   res.json({ mailingList: admin.mailingList });
 }
-
+/**
+ * Deletes selected emails based on the admin ID and emails to delete provided in the request body.
+ *
+ * @param {Request} req - the request object containing adminID and emailsToDelete
+ * @param {Response} res - the response object to send back the result
+ * @return {Promise<void>} A Promise that resolves when the emails are successfully deleted
+ */
 export async function deleteSelectedEmailsHandler(req: Request, res: Response) {
   const { adminID, emailsToDelete } = req.body;
 
@@ -59,6 +72,13 @@ export async function deleteSelectedEmailsHandler(req: Request, res: Response) {
   }
 }
 
+/**
+ * Asynchronous function to handle the addition of emails to an admin's mailing list.
+ *
+ * @param {Request} req - the request object
+ * @param {Response} res - the response object
+ * @return {Promise<void>} Promise that resolves with the result of the operation
+ */
 export async function addEmailsHandler(req: Request, res: Response) {
   const { adminID, emailList } = req.body;
 
@@ -95,6 +115,13 @@ export async function addEmailsHandler(req: Request, res: Response) {
   }
 }
 
+/**
+ * Updates an admin's information in the database.
+ *
+ * @param {Request} req - the request object
+ * @param {Response} res - the response object
+ * @return {Promise<void>} a Promise that resolves once the admin is updated
+ */
 export async function updateAdminHandler(
   req: Request,
   res: Response

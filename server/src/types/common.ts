@@ -3,8 +3,3 @@ export interface ArticleData {
   text: string;
   relevanceScore?: number; // Add this line
 }
-
-export interface Message {
-  role: string;
-  content: string;
-}
