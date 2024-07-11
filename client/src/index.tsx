@@ -11,17 +11,26 @@ const theme = createTheme({
   },
 });
 
-const container = document.getElementById("root");
-if (container !== null) {
-  const root = createRoot(container);
-  root.render(
-    <ThemeProvider theme={theme}>
-      <Auth0Provider
-        {...authConfig}
-        authorizationParams={{ redirect_uri: window.location.origin }}
-      >
-        <App />
-      </Auth0Provider>
-    </ThemeProvider>
-  );
-}
+const startApp = () => {
+  const container = document.getElementById("root");
+  if (container !== null) {
+    console.log("Rendering React app...");
+    const root = createRoot(container);
+    root.render(
+      <ThemeProvider theme={theme}>
+        <Auth0Provider
+          {...authConfig}
+          authorizationParams={{ redirect_uri: window.location.origin }}
+        >
+          <App />
+        </Auth0Provider>
+      </ThemeProvider>
+    );
+    console.log("React app rendered.");
+  } else {
+    console.error("Root container not found.");
+  }
+};
+
+// Call the startApp function to start the application
+startApp();

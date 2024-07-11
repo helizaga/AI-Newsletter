@@ -1,9 +1,9 @@
-import { MessageContent } from "@langchain/core/messages";
 import { Tiktoken } from "tiktoken/lite";
 import { load } from "tiktoken/load";
 import registry from "tiktoken/registry.json";
 import models from "tiktoken/model_to_encoding.json";
 const GPT_API_KEY = process.env.GPT_API_KEY as string;
+const USE_MOCKS = process.env.USE_MOCKS === "true"; // Add this line
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { StringOutputParser } from "@langchain/core/output_parsers";
@@ -25,6 +25,10 @@ export async function generateChatCompletion(
   temperature: number = 0.7,
   maxTokens: number | null = null
 ): Promise<string> {
+  if (USE_MOCKS) {
+    return mockGenerateChatCompletion(messages, model, temperature, maxTokens);
+  }
+
   openai.temperature = temperature;
   openai.model = model;
   openai.maxTokens = maxTokens ?? undefined;
@@ -45,9 +49,16 @@ export async function generateChatCompletion(
     await countTokens(contentString, model, costPerThousandTokensOutput);
     return contentString;
   } catch (error: any) {
-    console.error(error.response || error); // Log the full error response
+    console.error("Error in generateChatCompletion:", error); // Log the full error
+    if (error.response) {
+      console.error("Response data:", error.response.data);
+      console.error("Response status:", error.response.status);
+      console.error("Response headers:", error.response.headers);
+    }
     throw new Error(
-      `Error ${error.response.status}: ${error.response.statusText}`
+      `Error ${error.response?.status}: ${
+        error.response?.statusText || error.message
+      }`
     );
   }
   // console.log("model:", model);
@@ -76,8 +87,84 @@ export function getTotalCost(): number {
   return totalCost;
 }
 
-// This function generates the best Bing search query for a given topic and reason using GPT.
-async function generateOptimalBingSearchQuery(
+// Mock functions
+async function mockGenerateChatCompletion(
+  messages: (SystemMessage | HumanMessage)[],
+  model: string,
+  temperature: number,
+  maxTokens: number | null
+): Promise<string> {
+  console.log("Mock generateChatCompletion called with:", {
+    messages,
+    model,
+    temperature,
+    maxTokens,
+  });
+  return "This is a mock completion.";
+}
+
+async function mockGenerateOptimalBingSearchQuery(
+  topic: string,
+  reason: string
+): Promise<string> {
+  console.log("Mock generateOptimalBingSearchQuery called with:", {
+    topic,
+    reason,
+  });
+  return `Mock search query for ${topic} because of ${reason}`;
+}
+
+async function mockGenerateSummaryWithGPT(
+  processedData: string[]
+): Promise<string> {
+  console.log("Mock generateSummaryWithGPT called with:", { processedData });
+  return "This is a mock summary.";
+}
+
+async function mockGenerateNewsletterWithGPT(
+  topic: string,
+  reason: string,
+  summarizedText: string,
+  urls: string[]
+): Promise<string> {
+  console.log("Mock generateNewsletterWithGPT called with:", {
+    topic,
+    reason,
+    summarizedText,
+    urls,
+  });
+  return `This is a mock newsletter about ${topic} because of ${reason}`;
+}
+
+async function mockGetRelevanceScore(
+  article: string,
+  topic: string,
+  reason: string
+): Promise<number> {
+  console.log("Mock getRelevanceScore called with:", {
+    article,
+    topic,
+    reason,
+  });
+  return 0.5;
+}
+
+// Conditional exports
+export const generateOptimalBingSearchQuery = USE_MOCKS
+  ? mockGenerateOptimalBingSearchQuery
+  : originalGenerateOptimalBingSearchQuery;
+export const generateSummaryWithGPT = USE_MOCKS
+  ? mockGenerateSummaryWithGPT
+  : originalGenerateSummaryWithGPT;
+export const generateNewsletterWithGPT = USE_MOCKS
+  ? mockGenerateNewsletterWithGPT
+  : originalGenerateNewsletterWithGPT;
+export const getRelevanceScore = USE_MOCKS
+  ? mockGetRelevanceScore
+  : originalGetRelevanceScore;
+
+// Original functions
+async function originalGenerateOptimalBingSearchQuery(
   topic: string,
   reason: string
 ): Promise<string> {
@@ -99,9 +186,8 @@ async function generateOptimalBingSearchQuery(
 
   return searchQuery;
 }
-// This function generates a summary of the given processed data (articles) using GPT.
-// It truncates each article to 14700 characters and then generates a summary of 100-200 words..
-async function generateSummaryWithGPT(
+
+async function originalGenerateSummaryWithGPT(
   processedData: string[]
 ): Promise<string> {
   const summaries: string[] = [];
@@ -127,10 +213,7 @@ async function generateSummaryWithGPT(
   return summaries.join("\n\n");
 }
 
-// This function generates a customized newsletter using GPT, based on the given
-// search term, reason, summarized text, and URLs. The newsletter is in the style
-// of a Medium post and includes several sections, each teaching the reader something new.
-async function generateNewsletterWithGPT(
+async function originalGenerateNewsletterWithGPT(
   topic: string,
   reason: string,
   summarizedText: string,
@@ -163,7 +246,7 @@ async function generateNewsletterWithGPT(
   return newsletterContent;
 }
 
-async function getRelevanceScore(
+async function originalGetRelevanceScore(
   article: string,
   topic: string,
   reason: string
@@ -189,10 +272,3 @@ async function getRelevanceScore(
 
   return parseFloat(score);
 }
-
-export {
-  generateSummaryWithGPT,
-  generateNewsletterWithGPT,
-  generateOptimalBingSearchQuery,
-  getRelevanceScore,
-};
