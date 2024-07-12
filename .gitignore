@@ -2,7 +2,8 @@
 node_modules/
 dist/
 .aider*
-project_structure.text
+project_structure.textb 
 .cosine
 my_patch_file.patch
 changes.patch
+!npm-shrinkwrap.json
