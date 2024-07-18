@@ -1,7 +1,7 @@
 import { useState, FC } from "react";
 import { useQueryClient } from "react-query";
-import { ListItem, Button, Typography } from "@mui/material";
-
+import { ListItem, Button, Typography, Box } from "@mui/material";
+import { Send, Delete, Refresh } from "@mui/icons-material";
 import ConfirmSendDialog from "./ConfirmSendDialog";
 import NewsletterDetailDialog from "./NewsletterDetailDialog";
 import ConfirmDeleteDialog from "./ConfirmDeleteDialog";
@@ -14,16 +14,13 @@ import {
 import { useAdmin } from "../contexts/AdminContext";
 import { Newsletter } from "../types/common";
 
-// Extracted into a separate component
 export const NewsletterItem: FC<{ newsletter: Newsletter }> = ({
   newsletter,
 }) => {
   const queryClient = useQueryClient();
   const admin = useAdmin();
-
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [regenerateDialogOpen, setRegenerateDialogOpen] = useState(false);
-
   const [sendDialogOpen, setSendDialogOpen] = useState(false);
 
   const handleSendNewsletterClick = async () => {
@@ -87,35 +84,49 @@ export const NewsletterItem: FC<{ newsletter: Newsletter }> = ({
         onClose={() => setRegenerateDialogOpen(false)}
         onConfirm={handleRegenerateNewsletter}
       />
-      <ListItem>
-        <Typography variant="h6" style={{ marginRight: "4px" }}>
-          {newsletter.topic}
-        </Typography>
-        <Typography variant="h6" style={{ marginRight: "12px" }}>
-          {newsletter.reason}
-        </Typography>
-        <NewsletterDetailDialog newsletter={newsletter} />
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={() => setSendDialogOpen(true)}
-        >
-          Send Newsletter
-        </Button>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={() => setRegenerateDialogOpen(true)}
-        >
-          Regenerate
-        </Button>
-        <Button
-          variant="contained"
-          color="secondary"
-          onClick={() => setDeleteDialogOpen(true)}
-        >
-          Delete
-        </Button>
+      <ListItem
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <Box display="flex" alignItems="center" style={{ minWidth: "400px" }}>
+          <Typography variant="h6" style={{ flex: 1, marginRight: "16px" }}>
+            {newsletter.topic}
+          </Typography>
+          <Typography variant="h6">{newsletter.reason}</Typography>
+        </Box>
+        <Box display="flex" alignItems="center" style={{ marginLeft: "16px" }}>
+          <NewsletterDetailDialog newsletter={newsletter} />
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => setSendDialogOpen(true)}
+            startIcon={<Send />}
+            style={{ margin: "0 8px" }}
+          >
+            Send Newsletter
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => setRegenerateDialogOpen(true)}
+            startIcon={<Refresh />}
+            style={{ margin: "0 8px" }}
+          >
+            Regenerate
+          </Button>
+          <Button
+            variant="contained"
+            color="secondary"
+            onClick={() => setDeleteDialogOpen(true)}
+            startIcon={<Delete />}
+            style={{ margin: "0 8px" }}
+          >
+            Delete
+          </Button>
+        </Box>
       </ListItem>
     </>
   );

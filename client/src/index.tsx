@@ -3,6 +3,7 @@ import App from "./App";
 import { Auth0Provider } from "@auth0/auth0-react";
 import authConfig from "./config/auth0-config.json";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
+import "./App.css";
 
 const theme = createTheme({
   palette: {

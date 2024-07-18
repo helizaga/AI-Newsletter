@@ -1,15 +1,14 @@
-// Import necessary modules and components
-import React from "react";
 import LogoutButton from "./auth/LogoutButton";
 import NewsletterList from "./NewsletterList";
 import EmailList from "./EmailList";
 import NewsletterForm from "./NewsletterForm";
 
-// The AuthenticatedApp component handles the authenticated part of the application
 const AuthenticatedApp = () => {
   return (
     <>
-      <LogoutButton />
+      <div className="logout-container">
+        <LogoutButton />
+      </div>
       <NewsletterForm />
       <NewsletterList />
       <EmailList />
@@ -17,5 +16,4 @@ const AuthenticatedApp = () => {
   );
 };
 
-// Export the component for external use
 export default AuthenticatedApp;

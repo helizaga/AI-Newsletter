@@ -7,3 +7,4 @@ project_structure.textb
 my_patch_file.patch
 changes.patch
 !npm-shrinkwrap.json
+project_structure.text
