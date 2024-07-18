@@ -14,15 +14,7 @@ const NewsletterList = () => {
         marginTop="10px"
         borderBottom="1px solid #ccc"
         paddingBottom="5px"
-      >
-        <Typography variant="subtitle1" style={{ flex: 1, textAlign: "left" }}>
-          Topic
-        </Typography>
-        <Typography variant="subtitle1" style={{ flex: 1, textAlign: "left" }}>
-          Reason
-        </Typography>
-        <Box flex={2}></Box>
-      </Box>
+      ></Box>
       <List>
         {Array.isArray(newsletters) &&
           newsletters.map((newsletter, index) => (

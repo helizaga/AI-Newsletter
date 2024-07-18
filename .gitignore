@@ -1,10 +1,5 @@
 .env
 node_modules/
 dist/
-.aider*
-project_structure.textb 
-.cosine
-my_patch_file.patch
-changes.patch
 !npm-shrinkwrap.json
 project_structure.text

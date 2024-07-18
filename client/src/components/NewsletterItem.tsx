@@ -89,22 +89,28 @@ export const NewsletterItem: FC<{ newsletter: Newsletter }> = ({
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
+          borderBottom: "1px solid #ccc",
         }}
       >
-        <Box display="flex" alignItems="center" style={{ minWidth: "400px" }}>
-          <Typography variant="h6" style={{ flex: 1, marginRight: "16px" }}>
-            {newsletter.topic}
+        <Box
+          display="grid"
+          gridTemplateColumns="200px 1fr"
+          alignItems="center"
+          style={{ flexGrow: 1 }}
+        >
+          <Typography variant="h6">Topic: {newsletter.topic}</Typography>
+          <Typography style={{ marginRight: "16px" }} variant="h6">
+            Reason: {newsletter.reason}
           </Typography>
-          <Typography variant="h6">{newsletter.reason}</Typography>
         </Box>
-        <Box display="flex" alignItems="center" style={{ marginLeft: "16px" }}>
+        <Box display="flex" alignItems="center">
           <NewsletterDetailDialog newsletter={newsletter} />
           <Button
             variant="contained"
             color="primary"
             onClick={() => setSendDialogOpen(true)}
             startIcon={<Send />}
-            style={{ margin: "0 8px" }}
+            style={{ marginRight: "8px", marginLeft: "8px" }}
           >
             Send Newsletter
           </Button>
@@ -113,7 +119,7 @@ export const NewsletterItem: FC<{ newsletter: Newsletter }> = ({
             color="primary"
             onClick={() => setRegenerateDialogOpen(true)}
             startIcon={<Refresh />}
-            style={{ margin: "0 8px" }}
+            style={{ marginRight: "8px" }}
           >
             Regenerate
           </Button>
@@ -122,7 +128,7 @@ export const NewsletterItem: FC<{ newsletter: Newsletter }> = ({
             color="secondary"
             onClick={() => setDeleteDialogOpen(true)}
             startIcon={<Delete />}
-            style={{ margin: "0 8px" }}
+            style={{ marginRight: "8px" }}
           >
             Delete
           </Button>
